@@ -20,3 +20,5 @@
 ## 运行约束
 
 部署前运行 `php spark migrate --all`。任务调度需每分钟执行 `php spark tasks:run`：Compose 的 `geminus-admin` 容器已通过 cron 提供，非 Compose 部署需自行配置。队列与发送记录页面依赖项目默认的数据库 Queue 后端和应用默认数据库；更换后端或连接时需同步调整查询。队列载荷含正文和认证令牌，应限制数据库读取权限并按需清理过期任务。
+
+调度统一使用底座 [`Tasks`](../admin/geminus/Admin/Config/Tasks.php) 的 `commands` 列表，默认 `send-email` 每分钟执行 `queue:work email --stop-when-empty`。业务模块通过原生 `Config\Registrar::Tasks()` 追加任务，不使用同名 `Config/Tasks.php` 覆盖入口；接入示例及声明校验规则见[模块定时命令](module-development.md#模块定时命令)。

@@ -41,6 +41,7 @@ class Autoload extends AutoloadConfig
         APP_NAMESPACE           => APPPATH,
         'Geminus\Admin'         => ROOTPATH . 'geminus/Admin',
         'Modules\Announcements' => ROOTPATH . 'modules/Announcements',
+        'Modules\ExamVouchers'  => ROOTPATH . 'modules/ExamVouchers',
     ];
 
     /**

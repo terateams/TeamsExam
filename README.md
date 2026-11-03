@@ -37,8 +37,8 @@ TeamsExam 是基于 [GeminusAdmin](https://github.com/yonggang-xiao/geminus.admi
 ## 仓库与分支
 
 - 保留 GitHub Fork 关系，以 GeminusAdmin 底座仓库作为 `upstream`。
-- `main` 仅用于跟踪上游 `main`，通过 GitHub 的 **Sync fork** 同步，不合入 TeamsExam 业务改动。
-- `teams-exam` 是业务开发主线；上游更新同步到 `main` 后，将 `main` 合并到该分支，处理冲突并验证兼容性。
+- 保留 `main` 分支，仅用于跟踪上游 `main`；在 GitHub 页面上选择 `main` 分支，通过 **Sync fork** 同步该分支的上游更新，不合入 TeamsExam 业务改动。
+- `teams-exam` 是业务开发主线和 GitHub 默认分支；上游更新同步到 `main` 后，将 `main` 合并到该分支，处理冲突并验证兼容性。
 - 公共仓库的 Fork 仍为公共仓库，业务代码放在独立分支不会使其私有。
 
 ## 系统构成

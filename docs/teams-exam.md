@@ -7,8 +7,8 @@ TeamsExam 是拟基于 GeminusAdmin 建设的认证考试管理系统，功能�
 ## 仓库与分支
 
 - 保留 GitHub Fork 关系，以 GeminusAdmin 底座仓库作为上游。
-- Fork 的默认分支保留为 `main`，仅用于跟踪上游 `main`，不合入 TeamsExam 业务开发改动；通过 GitHub 页面上的 **Sync fork** 同步上游更新。
-- Fork 完成后，从 `main` 创建 TeamsExam 业务分支（名称暂定为 `teams-exam`），作为业务开发主线。上游更新同步到 `main` 后，再将 `main` 合并到业务分支，处理冲突并验证兼容性；不将业务改动合入 `main`。
+- 保留 `main` 分支，仅用于跟踪上游 `main`，不合入 TeamsExam 业务开发改动；在 GitHub 页面上选择 `main` 分支，通过 **Sync fork** 同步该分支的上游更新。
+- `teams-exam` 从 `main` 创建，作为业务开发主线和 GitHub 默认分支。上游更新同步到 `main` 后，再将 `main` 合并到业务分支，处理冲突并验证兼容性；不将业务改动合入 `main`。
 - Fork 的可见性遵循 GitHub 规则：公共底座的 Fork 也为公共仓库，业务代码放在独立分支不会使其私有；私有底座的 Fork 保持私有，并受组织及企业的 Fork 策略约束。
 
 ## 系统目标

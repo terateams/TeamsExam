@@ -56,7 +56,7 @@ TeamsExam 是基于 [GeminusAdmin](https://github.com/yonggang-xiao/geminus.admi
 - 身份与授权：[Microsoft Entra 登录](docs/microsoft-login.md)、[用户管理](docs/user-management.md)、[角色与权限](docs/roles-and-permissions.md)。成功登录不等于获得管理权限或证明所属培训班；业务模块仍须检查操作权限和记录归属。
 - 数据与界面：[通用数据管理](docs/data-management.md)、[通用界面组件](docs/ui-components.md)、[仪表盘](docs/dashboard.md)。底座 CSV 导入允许逐行部分成功，考试券的整批一致性须由业务模块保证。
 - 通知与留痕：[邮件发送与模板](docs/email-queue.md)、[通知中心](docs/notifications.md)、[操作审计](docs/operation-audit.md)。业务写操作接入底座审计配置，摘要不包含完整券码或凭证内容。
-- 模块与接口：[业务模块示例](docs/example-business-module.md)、[底座 API 说明](docs/api.md)。首版不要求建设通用 API 或独立客户端。
+- 模块与接口：[模块开发与底座扩展](docs/module-development.md)、[业务模块示例](docs/example-business-module.md)、[底座 API 说明](docs/api.md)。首版不要求建设通用 API 或独立客户端。
 
 ## 快速启动
 

@@ -60,7 +60,7 @@ TeamsExam 是基于 [GeminusAdmin](https://github.com/yonggang-xiao/geminus.admi
 
 ## 快速启动
 
-以下为底座开发环境的启动方式，容器服务名及示例数据库名沿用底座配置。部署时应独立配置数据库及应用参数。Azure 模型密钥不得写入仓库，接入前须明确机构隐私及数据处理要求。
+以下使用 Docker Compose 启动开发环境。部署时应独立配置数据库及应用参数。Azure 模型密钥不得写入仓库，接入前须明确机构隐私及数据处理要求。
 
 需要安装 Docker 和 Docker Compose，并确保本机的 80、443 和 8080 端口未被占用。以下命令均在仓库根目录执行。
 
@@ -74,25 +74,26 @@ TeamsExam 是基于 [GeminusAdmin](https://github.com/yonggang-xiao/geminus.admi
 
 	```dotenv
 	database.default.hostname = db
-	database.default.database = geminus
-	database.default.username = geminus
-	database.default.password = geminus.admin
+	database.default.database = teamsexam
+	database.default.username = teamsexam
+	database.default.password = root
 	database.default.DBDriver = Postgre
 	database.default.port = 5432
 	```
 
-3. 构建并启动应用及配套开发服务：
+3. 构建镜像，安装依赖后再启动应用及配套开发服务。首次安装使用临时容器，不要求应用容器已运行：
 
 	```sh
+	docker compose -f docker/docker-compose.yaml build teamsexam-admin
+	docker compose -f docker/docker-compose.yaml run --rm --no-deps teamsexam-admin composer install
 	docker compose -f docker/docker-compose.yaml up -d --build
-	docker compose -f docker/docker-compose.yaml exec geminus-admin composer install
-	docker compose -f docker/docker-compose.yaml exec geminus-admin php spark migrate --all
+	docker compose -f docker/docker-compose.yaml exec teamsexam-admin php spark migrate --all
 	```
 
 4. 创建首个 `superadmin` 账号（将示例邮箱替换为实际邮箱）：
 
 	```sh
-	docker compose -f docker/docker-compose.yaml exec geminus-admin php spark shield:user create -n admin -e admin@example.com -g superadmin
+	docker compose -f docker/docker-compose.yaml exec teamsexam-admin php spark shield:user create -n admin -e admin@example.com -g superadmin
 	```
 
 	按终端提示输入并确认密码。公开注册已关闭；首个账号需要 `superadmin` 组以管理后台设置和其他管理员。此命令创建本地登录账号，不会自动配置 Microsoft 登录。
@@ -102,7 +103,7 @@ TeamsExam 是基于 [GeminusAdmin](https://github.com/yonggang-xiao/geminus.admi
 接口调试界面位于 [https://localhost/swagger/](https://localhost/swagger/)，首次使用须生成文档并启动可选的 Swagger UI 容器：
 
 ```sh
-docker compose -f docker/docker-compose.yaml exec -T geminus-admin php spark openapi:generate
+docker compose -f docker/docker-compose.yaml exec -T teamsexam-admin php spark openapi:generate
 docker compose -f docker/docker-compose.yaml up -d swagger-ui
 ```
 
@@ -113,16 +114,16 @@ docker compose -f docker/docker-compose.yaml up -d swagger-ui
 测试必须使用独立的 PostgreSQL 数据库，不要将 `database.tests.database` 指向业务库。启动容器后，在仓库根目录执行一次建库命令：
 
 ```sh
-docker compose -f docker/docker-compose.yaml exec -T db psql -U geminus -d postgres -c 'CREATE DATABASE geminus_test OWNER geminus'
+docker compose -f docker/docker-compose.yaml exec -T db psql -U teamsexam -d postgres -c 'CREATE DATABASE teamsexam_test OWNER teamsexam'
 ```
 
 在 `admin/.env` 中添加以下测试连接配置（不要改动上面的 `database.default.*` 业务库配置）：
 
 ```dotenv
 database.tests.hostname = db
-database.tests.database = geminus_test
-database.tests.username = geminus
-database.tests.password = geminus.admin
+database.tests.database = teamsexam_test
+database.tests.username = teamsexam
+database.tests.password = root
 database.tests.DBDriver = Postgre
 database.tests.DBPrefix =
 database.tests.charset = utf8
@@ -132,5 +133,5 @@ database.tests.port = 5432
 运行后台测试；测试所需的表由测试流程创建，无需在测试库中手动执行迁移：
 
 ```sh
-docker compose -f docker/docker-compose.yaml exec -T geminus-admin vendor/bin/phpunit --testsuite App --no-coverage
+docker compose -f docker/docker-compose.yaml exec -T teamsexam-admin vendor/bin/phpunit --testsuite App --no-coverage
 ```

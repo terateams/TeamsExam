@@ -7,7 +7,7 @@
         <div class="row align-items-center g-4">
             <div class="col-lg">
                 <div class="container-tight">
-                    <div class="text-center mb-4"><span class="h2">GeminusAdmin</span></div>
+                    <div class="text-center mb-4"><span class="h2">TeamsExam</span></div>
                     <div class="card card-md">
                         <div class="card-body">
                             <h1 class="h2 text-center mb-4"><?= esc(lang('Auth.login')) ?></h1>

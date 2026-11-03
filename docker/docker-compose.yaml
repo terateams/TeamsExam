@@ -1,9 +1,9 @@
 services:
-  geminus-admin:
+  teamsexam-admin:
     build:
       context: ./php
       dockerfile: Dockerfile
-    container_name: geminus-admin
+    container_name: teamsexam-admin
     ports:
       - "80:80"
       - "443:443"
@@ -24,7 +24,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: geminus-redis
+    container_name: teamsexam-redis
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
@@ -36,18 +36,19 @@ services:
   
   db:
     image: postgres:16
-    container_name: geminus-db
+    container_name: teamsexam-db
     shm_size: 128mb
     environment:
-      POSTGRES_DB: geminus
-      POSTGRES_PASSWORD: geminus.admin
-      POSTGRES_USER: geminus
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: teamsexam
+      POSTGRES_PASSWORD: root
+      POSTGRES_USER: teamsexam
     volumes:
       - ./pgdata:/var/lib/postgresql/data
   
   adminer:
     image: adminer:6
-    container_name: geminus-adminer
+    container_name: teamsexam-adminer
     ports:
       - "8080:8080"
     depends_on:
@@ -55,7 +56,7 @@ services:
 
   swagger-ui:
     image: swaggerapi/swagger-ui:v5.32.0
-    container_name: geminus-swagger-ui
+    container_name: teamsexam-swagger-ui
     profiles: [dev]
     environment:
       URL: /swagger/openapi.json

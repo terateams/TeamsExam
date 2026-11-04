@@ -126,6 +126,57 @@ final class ExamVoucherQueryTest extends CIUnitTestCase
         }
     }
 
+    public function testAssignmentStatusAndRecipientAreShownOnListAndDetail(): void
+    {
+        $assigned   = $this->voucher('ASSIGNED', 'Issuer', 'assigned-code', 'Exam', 'Region');
+        $unassigned = $this->voucher('UNASSIGNED', 'Issuer', 'unassigned-code', 'Exam', 'Region');
+        $this->loginAs(['exam-vouchers.manage']);
+
+        $recipient        = new AdminUser(['username' => 'voucher-recipient']);
+        $recipient->email = 'voucher-recipient@example.com';
+        $recipient->setPassword('A-local-password-123!');
+        $users = auth()->getProvider();
+        $users->save($recipient);
+        db_connect()->table('exam_vouchers')->where('id', $assigned)->update(['recipient_id' => $users->getInsertID()]);
+
+        foreach ([
+            'en'      => ['Recipient', 'Assigned', 'Unassigned'],
+            'zh-Hans' => ['接收人', '已分发', '未分发'],
+            'zh-Hant' => ['接收人', '已分發', '未分發'],
+        ] as $locale => [$recipientLabel, $assignedLabel, $unassignedLabel]) {
+            $list = $this->get("/{$locale}/admin/exam-vouchers");
+            $list->assertOK();
+            $document = new DOMDocument();
+            $document->loadHTML($list->response()->getBody(), LIBXML_NOERROR | LIBXML_NOWARNING);
+            $xpath = new DOMXPath($document);
+
+            foreach ([
+                $assigned   => [$assignedLabel, 'bg-green-lt', true],
+                $unassigned => [$unassignedLabel, 'bg-yellow-lt', false],
+            ] as $id => [$label, $color, $hasRecipient]) {
+                $rows = $xpath->query("//table/tbody/tr[td//a[@href='/{$locale}/admin/exam-vouchers/{$id}']]");
+                $this->assertSame(1, $rows->length);
+                $row   = $rows->item(0);
+                $badge = $xpath->query("./td[7]/span[contains(concat(' ', normalize-space(@class), ' '), ' badge ') and contains(concat(' ', normalize-space(@class), ' '), ' {$color} ')]", $row);
+                $this->assertSame(1, $badge->length);
+                $this->assertSame($label, trim($badge->item(0)->textContent));
+                $this->assertSame($hasRecipient ? 1 : 0, $xpath->query("./td[7]/div[text()='voucher-recipient']", $row)->length);
+                $this->assertSame($hasRecipient ? 0 : 1, $xpath->query(".//a[@href='/{$locale}/admin/exam-vouchers/{$id}/assign']", $row)->length);
+
+                $detail = $this->get("/{$locale}/admin/exam-vouchers/{$id}");
+                $detail->assertOK();
+                $detailDocument = new DOMDocument();
+                $detailDocument->loadHTML($detail->response()->getBody(), LIBXML_NOERROR | LIBXML_NOWARNING);
+                $detailXPath = new DOMXPath($detailDocument);
+                $field       = $detailXPath->query("//dt[text()='{$recipientLabel}']/following-sibling::dd[1]");
+                $this->assertSame($hasRecipient ? 1 : 0, $field->length);
+                if ($hasRecipient) {
+                    $this->assertSame('voucher-recipient', trim($field->item(0)->textContent));
+                }
+            }
+        }
+    }
+
     public function testVoucherNumbersIdentifyListRowsAndIndividualPages(): void
     {
         $first  = $this->voucher('NUMBER-ONE', 'Issuer', 'number-secret-one', 'Exam', 'Region');

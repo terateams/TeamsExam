@@ -55,7 +55,14 @@
                             <td class="text-break"><?= esc($voucher['exam'] ?? '') ?></td>
                             <td class="text-break"><?= esc($voucher['region'] ?? '') ?></td>
                             <td><?= esc($voucher['expires_on']) ?></td>
-                            <td><?= esc($voucher['recipient_id'] === null ? lang('ExamVouchers.unassigned') : ($voucher['recipient_username'] ?? '#' . $voucher['recipient_id'])) ?></td>
+                            <td>
+                                <?php if ($voucher['recipient_id'] === null): ?>
+                                    <span class="badge bg-yellow-lt"><?= esc(lang('ExamVouchers.unassigned')) ?></span>
+                                <?php else: ?>
+                                    <span class="badge bg-green-lt"><?= esc(lang('ExamVouchers.assignedCount')) ?></span>
+                                    <div class="text-break mt-1"><?= esc($voucher['recipient_username'] ?? '#' . $voucher['recipient_id']) ?></div>
+                                <?php endif ?>
+                            </td>
                             <td><?= esc(lang((int) $voucher['usage_verified'] === 0 ? 'ExamVouchers.notVerified' : 'ExamVouchers.verified')) ?></td>
                             <td><div class="btn-list"><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-vouchers/show', $voucher['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.voucherDetail'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.voucherDetail'), 'attr') ?>"><i class="ti ti-eye" aria-hidden="true"></i></a>
                                 <?php if ($voucher['recipient_id'] === null): ?><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-vouchers/assign', $voucher['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.assign'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.assign'), 'attr') ?>"><i class="ti ti-user-plus" aria-hidden="true"></i></a><?php endif ?>

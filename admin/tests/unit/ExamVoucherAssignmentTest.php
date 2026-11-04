@@ -56,6 +56,17 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         $this->assertSame(ltrim($path, '/'), $log['path']);
         $this->assertSame('success', $log['result']);
         $this->assertSame((string) $voucher, $log['target_id']);
+        $this->assertSame('exam-voucher.assign', $log['operation']);
+        $this->assertSame('exam-voucher', $log['target_type']);
+        $this->assertSame(['recipient_id' => (string) $recipient], json_decode($log['submission'], true)['fields']);
+
+        auth()->user()->addPermission('operation-audit.view');
+        $page = $this->get('/zh-Hans/admin/audit');
+        $page->assertOK();
+        $page->assertSee('exam-voucher.assign');
+        $page->assertSee('提交内容');
+        $page->assertSee('recipient_id');
+        $this->assertStringNotContainsString('private-voucher-code', $page->response()->getBody());
 
         $other = $this->user('student-two');
         $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $other])->assertRedirect();
@@ -65,6 +76,8 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         $this->assertSame('POST', $log['action']);
         $this->assertSame(ltrim($path, '/'), $log['path']);
         $this->assertSame('failed', $log['result']);
+        $this->assertSame('exam-voucher.assign', $log['operation']);
+        $this->assertSame(['recipient_id' => (string) $other], json_decode($log['submission'], true)['fields']);
         $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $recipient])->assertRedirect();
         $this->assertSame('danger', session('alert.type'));
         $this->assertSame($recipient, (int) $this->recipient($voucher));
@@ -100,9 +113,13 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
             $this->assertSame('danger', session('alert.type'));
             $this->assertStringNotContainsString('private-voucher-code', session('alert.message'));
             $this->assertNull($this->recipient($voucher));
+            $log = db_connect()->table('operation_audit_logs')->orderBy('id', 'DESC')->get()->getRowArray();
+            $this->assertSame('failed', $log['result']);
+            $this->assertSame('exam-voucher.assign', $log['operation']);
+            $this->assertSame((string) $voucher, $log['target_id']);
+            $this->assertSame(['recipient_id' => $invalid], json_decode($log['submission'], true)['fields']);
         }
         $this->post('/en/admin/exam-vouchers/999999/assign', [csrf_token() => csrf_hash(), 'recipient_id' => '1'])->assertStatus(404);
-        $this->assertStringNotContainsString('private-voucher-code', json_encode(db_connect()->table('operation_audit_logs')->get()->getResultArray()));
 
         try {
             db_connect()->table('exam_vouchers')->where('id', $voucher)->update(['recipient_id' => 999999]);

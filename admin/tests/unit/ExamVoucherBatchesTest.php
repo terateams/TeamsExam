@@ -104,6 +104,47 @@ final class ExamVoucherBatchesTest extends CIUnitTestCase
         $this->assertNull($model->find($batch['id']));
     }
 
+    public function testBatchAuditRecordsConfiguredSubmissionsAndResults(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+        $this->post('/en/admin/exam-voucher-batches/create', [
+            csrf_token()   => csrf_hash(), 'identifier' => ' B-AUDIT ', 'issuer' => ' Supplier ',
+            'purchased_on' => '2026-10-01', 'private_field' => 'do-not-record',
+        ])->assertRedirect();
+        $batch = (new BatchModel())->where('identifier', 'B-AUDIT')->first();
+        $this->assertNotNull($batch);
+        $this->post('/en/admin/exam-voucher-batches/update/' . $batch['id'], [
+            csrf_token()   => csrf_hash(), 'identifier' => 'B-AUDIT', 'issuer' => 'Updated supplier',
+            'purchased_on' => '2026-10-02', 'private_field' => 'do-not-record',
+        ])->assertRedirect();
+        $this->post('/en/admin/exam-voucher-batches/update/' . $batch['id'], [
+            csrf_token()    => csrf_hash(), 'identifier' => '', 'issuer' => 'Invalid supplier',
+            'private_field' => 'do-not-record',
+        ])->assertRedirect();
+
+        $logs = db_connect()->table('operation_audit_logs')->orderBy('id')->get()->getResultArray();
+        $this->assertCount(3, $logs);
+        $this->assertSame(['exam-voucher-batch.create', 'exam-voucher-batch.update', 'exam-voucher-batch.update'], array_column($logs, 'operation'));
+        $this->assertSame(['exam-voucher-batch', 'exam-voucher-batch', 'exam-voucher-batch'], array_column($logs, 'target_type'));
+        $this->assertSame([null, (string) $batch['id'], (string) $batch['id']], array_column($logs, 'target_id'));
+        $this->assertSame(['success', 'success', 'failed'], array_column($logs, 'result'));
+
+        foreach ([
+            ['identifier' => ' B-AUDIT ', 'issuer' => ' Supplier ', 'purchased_on' => '2026-10-01'],
+            ['identifier' => 'B-AUDIT', 'issuer' => 'Updated supplier', 'purchased_on' => '2026-10-02'],
+            ['identifier' => '', 'issuer' => 'Invalid supplier'],
+        ] as $index => $expected) {
+            $fields = json_decode($logs[$index]['submission'], true)['fields'];
+            $this->assertCount(count($expected), $fields);
+
+            foreach ($expected as $field => $value) {
+                $this->assertSame($value, $fields[$field]);
+            }
+        }
+        $this->assertStringNotContainsString('do-not-record', json_encode($logs));
+        $this->assertSame('Updated supplier', (new BatchModel())->find($batch['id'])['issuer']);
+    }
+
     public function testNewBatchSuggestsAvailableEditableIdentifier(): void
     {
         $this->loginAs(['exam-vouchers.manage']);

@@ -12,12 +12,27 @@ use Geminus\Admin\Config\AdminMenu;
     </li>
     <?php foreach (config(AdminMenu::class)->items as $item): ?>
         <?php if (array_any((array) $item['permission'], static fn (string $permission): bool => auth()->user()?->can($permission) ?? false)): ?>
-            <li class="nav-item<?= url_is($item['active']) ? ' active' : '' ?>">
-                <a class="nav-link<?= url_is($item['active']) ? ' active' : '' ?>" href="<?= route_to($item['route']) ?>"<?= url_is($item['active']) ? ' aria-current="page"' : '' ?>>
-                    <i class="ti <?= esc($item['icon'], 'attr') ?> nav-link-icon icon" aria-hidden="true"></i>
-                    <span class="nav-link-title"><?= esc(lang($item['label'])) ?></span>
-                </a>
-            </li>
+            <?php if (isset($item['children'])): ?>
+                <?php $isActive = array_any($item['children'], static fn (array $child): bool => url_is($child['active'])); ?>
+                <li class="nav-item dropdown<?= $isActive ? ' active' : '' ?>">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="<?= $isActive ? 'true' : 'false' ?>">
+                        <i class="ti <?= esc($item['icon'], 'attr') ?> nav-link-icon icon" aria-hidden="true"></i>
+                        <span class="nav-link-title"><?= esc(lang($item['label'])) ?></span>
+                    </a>
+                    <div class="dropdown-menu<?= $isActive ? ' show' : '' ?>">
+                        <?php foreach ($item['children'] as $child): ?>
+                            <a class="dropdown-item<?= url_is($child['active']) ? ' active' : '' ?>" href="<?= route_to($child['route']) ?>"<?= url_is($child['active']) ? ' aria-current="page"' : '' ?>><?= esc(lang($child['label'])) ?></a>
+                        <?php endforeach; ?>
+                    </div>
+                </li>
+            <?php else: ?>
+                <li class="nav-item<?= url_is($item['active']) ? ' active' : '' ?>">
+                    <a class="nav-link<?= url_is($item['active']) ? ' active' : '' ?>" href="<?= route_to($item['route']) ?>"<?= url_is($item['active']) ? ' aria-current="page"' : '' ?>>
+                        <i class="ti <?= esc($item['icon'], 'attr') ?> nav-link-icon icon" aria-hidden="true"></i>
+                        <span class="nav-link-title"><?= esc(lang($item['label'])) ?></span>
+                    </a>
+                </li>
+            <?php endif; ?>
         <?php endif; ?>
     <?php endforeach; ?>
     <?php if (auth()->user()?->can('users.view') || auth()->user()?->can('users.create') || auth()->user()?->can('operation-audit.view') || auth()->user()?->can('email-deliveries.view') || auth()->user()?->can('email-templates.manage') || auth()->user()?->can('email-settings.manage') || auth()->user()?->can('microsoft-settings.manage') || auth()->user()?->inGroup('superadmin')): ?>

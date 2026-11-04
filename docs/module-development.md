@@ -2,6 +2,31 @@
 
 本文说明独立业务模块接入底座的通用扩展约定。业务代码归所属模块维护，底座负责共享能力和统一入口，不引用具体业务模块。路由、权限、页面和迁移的完整接入示例见[公告业务模块](example-business-module.md)。
 
+## 侧栏菜单
+
+模块在自己的 `Config/Registrar.php` 中通过 `AdminMenu()` 返回 `items` 列表，向 [`AdminMenu`](../admin/geminus/Admin/Config/AdminMenu.php) 追加侧栏入口。单层入口继续使用 `permission`、`route`、`label`、`icon` 和 `active`，无需修改已有声明。
+
+需要分组时，父项保留 `permission`、`label`、`icon`，用 `children` 列表代替 `route` 和 `active`：
+
+```php
+public static function AdminMenu(): array
+{
+    return ['items' => [[
+        'permission' => ['example.view', 'example.manage'],
+        'label'      => 'Example.menu',
+        'icon'       => 'ti-folder',
+        'children'   => [
+            ['route' => 'admin/example', 'label' => 'Example.list', 'active' => '*/admin/example'],
+            ['route' => 'admin/example/reports', 'label' => 'Example.reports', 'active' => '*/admin/example/reports*'],
+        ],
+    ]]];
+}
+```
+
+模块须提供示例中的命名路由和语言文本。`label` 是语言键，`icon` 是 Tabler 图标类；子项 `route` 使用不需要额外参数的命名路由，`active` 使用 CI4 `url_is()` 路径匹配模式。根据各页面路径合理设置模式，避免多个子项同时匹配。任一子项匹配时，父菜单高亮并展开，匹配的子项高亮；链接由 `route_to()` 生成并保留当前 locale。
+
+父项 `permission` 可以是单个权限字符串或权限列表，列表中任一权限满足即显示父项及其全部子项，子项不单独配置可见权限。菜单可见性不是访问控制，模块仍须为每条业务路由配置适当的认证和权限过滤器；统一显示的子项可能指向当前用户无权访问的路由。
+
 ## 模块定时命令
 
 统一调度入口是 [`Geminus\Admin\Config\Tasks`](../admin/geminus/Admin/Config/Tasks.php)，无需创建 `app/Config/Tasks.php`。业务模块负责自己的命令与周期声明，底座负责聚合、声明校验和统一注册。

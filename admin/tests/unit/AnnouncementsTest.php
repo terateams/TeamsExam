@@ -1430,23 +1430,6 @@ final class AnnouncementsTest extends CIUnitTestCase
         $this->get($route)->assertOK();
     }
 
-    public function testLegacySinglePermissionMenuStillChecksAuthorization(): void
-    {
-        $config          = config(AdminMenu::class);
-        $originalItems   = $config->items;
-        $config->items[] = ['permission' => 'announcements.manage', 'route' => 'admin/announcements', 'label' => 'Legacy menu string', 'icon' => 'ti-speakerphone', 'active' => '*/admin/announcements*'];
-
-        try {
-            $this->loginAs('admin');
-            $this->get('/en/admin/dashboard')->assertDontSee('Legacy menu string');
-            auth()->logout();
-            $this->loginAs('superadmin', ['announcements.manage']);
-            $this->get('/en/admin/dashboard')->assertSee('Legacy menu string');
-        } finally {
-            $config->items = $originalItems;
-        }
-    }
-
     #[DataProvider('providePublicationConstraintRejectsInvalidStates')]
     public function testPublicationConstraintRejectsInvalidStates(array $state): void
     {

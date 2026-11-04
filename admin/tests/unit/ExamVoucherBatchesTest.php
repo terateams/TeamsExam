@@ -23,6 +23,59 @@ final class ExamVoucherBatchesTest extends CIUnitTestCase
         parent::tearDown();
     }
 
+    public function testVoucherMenuProvidesLocalizedLinksAndHighlightsCurrentSection(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+        $batch = (new BatchModel())->insert(['identifier' => 'B-MENU', 'issuer' => 'Supplier']);
+
+        foreach ([
+            'en'      => ['Exam voucher management', 'Purchase batch', 'Exam voucher list'],
+            'zh-Hans' => ['考试券管理', '采购批次', '考试券列表'],
+            'zh-Hant' => ['考試券管理', '採購批次', '考試券列表'],
+        ] as $locale => [$menuLabel, $batchLabel, $voucherLabel]) {
+            $batchUrl   = "/{$locale}/admin/exam-voucher-batches";
+            $voucherUrl = "/{$locale}/admin/exam-vouchers";
+
+            foreach ([
+                "/{$locale}/admin/dashboard"  => null,
+                $batchUrl                     => $batchUrl,
+                "{$batchUrl}/show/{$batch}"   => $batchUrl,
+                "{$batchUrl}/{$batch}/import" => $batchUrl,
+                $voucherUrl                   => $voucherUrl,
+            ] as $path => $activeUrl) {
+                $response = $this->get($path);
+                $response->assertOK();
+                $document = new DOMDocument();
+                @$document->loadHTML('<?xml encoding="UTF-8">' . $response->response()->getBody());
+                $xpath = new DOMXPath($document);
+                $group = $xpath->query("//div[@id='sidebar-menu']//li[div/a[@href='{$batchUrl}']]");
+                $this->assertSame(1, $group->length, $path);
+                $this->assertStringContainsString($menuLabel, $group->item(0)->textContent);
+                $this->assertSame($batchLabel, trim($xpath->query("./div/a[@href='{$batchUrl}']", $group->item(0))->item(0)->textContent));
+                $this->assertSame($voucherLabel, trim($xpath->query("./div/a[@href='{$voucherUrl}']", $group->item(0))->item(0)->textContent));
+                $this->assertSame($activeUrl === null ? 0 : 1, $xpath->query("self::li[contains(concat(' ', normalize-space(@class), ' '), ' active ')]", $group->item(0))->length);
+                $this->assertSame($activeUrl === null ? 'false' : 'true', $xpath->query('./a', $group->item(0))->item(0)->getAttribute('aria-expanded'));
+                $this->assertSame($activeUrl === null ? 0 : 1, $xpath->query("./div[contains(concat(' ', normalize-space(@class), ' '), ' show ')]", $group->item(0))->length);
+                $current = $xpath->query("./div/a[@aria-current='page']", $group->item(0));
+                $this->assertSame($activeUrl === null ? 0 : 1, $current->length, $path);
+                if ($activeUrl !== null) {
+                    $this->assertSame($activeUrl, $current->item(0)->getAttribute('href'));
+                    $this->assertStringContainsString(' active ', ' ' . $current->item(0)->getAttribute('class') . ' ');
+                }
+            }
+        }
+    }
+
+    public function testVoucherMenuIsHiddenWithoutPermission(): void
+    {
+        $this->loginAs(['announcements.manage']);
+        $response = $this->get('/en/admin/dashboard');
+        $response->assertOK();
+        $this->assertStringNotContainsString('Exam voucher management', $response->response()->getBody());
+        $this->assertStringNotContainsString('href="/en/admin/exam-voucher-batches"', $response->response()->getBody());
+        $this->assertStringNotContainsString('href="/en/admin/exam-vouchers"', $response->response()->getBody());
+    }
+
     public function testManagerCreatesViewsUpdatesAndDeletesBatch(): void
     {
         $this->loginAs(['exam-vouchers.manage']);

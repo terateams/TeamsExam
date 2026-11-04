@@ -29,10 +29,20 @@ class Registrar
     {
         return ['items' => [[
             'permission' => 'exam-vouchers.manage',
-            'route'      => 'admin/exam-voucher-batches',
-            'label'      => 'ExamVouchers.title',
+            'label'      => 'ExamVouchers.menu',
             'icon'       => 'ti-ticket',
-            'active'     => '*/admin/exam-voucher*',
+            'children'   => [
+                [
+                    'route'  => 'admin/exam-voucher-batches',
+                    'label'  => 'ExamVouchers.batch',
+                    'active' => '*/admin/exam-voucher-batches*',
+                ],
+                [
+                    'route'  => 'admin/exam-vouchers',
+                    'label'  => 'ExamVouchers.voucherList',
+                    'active' => '*/admin/exam-vouchers*',
+                ],
+            ],
         ]]];
     }
 }

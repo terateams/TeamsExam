@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'menu'                => '考试券管理', 'voucherList' => '考试券列表',
     'title'               => '考试券采购批次', 'batch' => '采购批次', 'create' => '新建批次',
     'edit'                => '编辑批次', 'identifier' => '批次标识', 'issuer' => '发券方',
     'save'                => '保存', 'cancel' => '取消', 'saved' => '批次已保存。',

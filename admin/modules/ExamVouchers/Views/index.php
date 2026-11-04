@@ -26,6 +26,7 @@
                     <?php foreach (['identifier' => 'identifier', 'issuer' => 'issuer', 'purchased_on' => 'purchasedOn'] as $field => $label): ?>
                         <?= view_cell('Geminus\Admin\Cells\SortHeaderCell', ['action' => route_to('admin/exam-voucher-batches'), 'field' => $field, 'label' => lang('ExamVouchers.' . $label), 'sort' => $query->sort, 'direction' => $query->direction, 'filters' => ['q' => $query->search], 'defaultDirection' => $field === 'purchased_on' ? 'DESC' : 'ASC']) ?>
                     <?php endforeach; ?>
+                    <th scope="col"><?= esc(lang('ExamVouchers.voucherCount')) ?></th>
                     <th scope="col" class="w-1"><?= esc(lang('Admin.userActions')) ?></th>
                 </tr></thead>
                 <tbody>
@@ -34,11 +35,12 @@
                             <td class="text-break"><a href="<?= route_to('admin/exam-voucher-batches/show', $batch['id']) ?>"><?= esc($batch['identifier']) ?></a></td>
                             <td class="text-break"><?= esc($batch['issuer']) ?></td>
                             <td class="text-nowrap"><?= esc($batch['purchased_on'] ?? '-') ?></td>
+                            <td><?= esc($voucherCounts[$batch['id']] ?? 0) ?></td>
                             <td><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-voucher-batches/edit', $batch['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.edit'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.edit'), 'attr') ?>"><i class="ti ti-edit" aria-hidden="true"></i></a></td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if ($batches === []): ?>
-                        <tr><td colspan="4"><?= view_cell('Geminus\Admin\Cells\EmptyStateCell', ['message' => lang($query->search === '' ? 'ExamVouchers.empty' : 'ExamVouchers.noResults'), 'filtered' => $query->search !== '', 'clearUrl' => route_to('admin/exam-voucher-batches'), 'clearLabel' => lang('Admin.userClear'), 'createUrl' => route_to('admin/exam-voucher-batches/new'), 'createLabel' => lang('ExamVouchers.create')]) ?></td></tr>
+                        <tr><td colspan="5"><?= view_cell('Geminus\Admin\Cells\EmptyStateCell', ['message' => lang($query->search === '' ? 'ExamVouchers.empty' : 'ExamVouchers.noResults'), 'filtered' => $query->search !== '', 'clearUrl' => route_to('admin/exam-voucher-batches'), 'clearLabel' => lang('Admin.userClear'), 'createUrl' => route_to('admin/exam-voucher-batches/new'), 'createLabel' => lang('ExamVouchers.create')]) ?></td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

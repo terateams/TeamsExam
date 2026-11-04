@@ -4,6 +4,7 @@ use CodeIgniter\Security\Exceptions\SecurityException;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
+use Config\Services;
 use Geminus\Admin\Entities\AdminUser;
 use Modules\ExamVouchers\Models\BatchModel;
 
@@ -275,6 +276,62 @@ final class ExamVoucherBatchesTest extends CIUnitTestCase
         $this->assertNotNull($link);
         parse_str((string) parse_url($link->getAttribute('href'), PHP_URL_QUERY), $parameters);
         $this->assertSame(['q' => 'PAGE', 'sort' => 'identifier', 'direction' => 'ASC', 'page' => '2'], $parameters);
+    }
+
+    public function testBatchListShowsVoucherCountsAcrossLocalesSearchAndPages(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+        $model = new BatchModel();
+        $ids   = [];
+
+        for ($number = 0; $number < 23; $number++) {
+            $identifier       = sprintf('COUNT-%02d', $number);
+            $ids[$identifier] = $model->insert(['identifier' => $identifier, 'issuer' => 'Supplier']);
+        }
+
+        $vouchers = db_connect()->table('exam_vouchers');
+
+        foreach ([
+            ['COUNT-01', null, null, '2020-01-01'],
+            ['COUNT-01', auth()->id(), null, '2030-01-01'],
+            ['COUNT-01', null, 'Verified', '2030-01-01'],
+            ['COUNT-21', auth()->id(), 'Verified', '2030-01-01'],
+        ] as $index => [$identifier, $recipient, $verification, $expiry]) {
+            $vouchers->insert([
+                'batch_id'     => $ids[$identifier], 'code_ciphertext' => 'test-ciphertext',
+                'code_digest'  => hash('sha256', 'batch-count-' . $index), 'expires_on' => $expiry,
+                'recipient_id' => $recipient, 'verification_note' => $verification,
+            ]);
+        }
+
+        foreach (['en' => 'Voucher count', 'zh-Hans' => '考试券数量', 'zh-Hant' => '考試券數量'] as $locale => $label) {
+            $response = $this->get("/{$locale}/admin/exam-voucher-batches?q=COUNT-0&sort=identifier&direction=ASC");
+            $response->assertOK();
+            $document = new DOMDocument();
+            @$document->loadHTML('<?xml encoding="UTF-8">' . $response->response()->getBody());
+            $xpath = new DOMXPath($document);
+            $this->assertSame(1, $xpath->query('//table/thead/tr/th[normalize-space(.)="' . $label . '"]')->length);
+            $this->assertSame(10, $xpath->query('//table/tbody/tr')->length);
+            $this->assertSame('0', trim($xpath->query('//table/tbody/tr[td/a[normalize-space(.)="COUNT-00"]]/td[4]')->item(0)->textContent));
+            $this->assertSame('3', trim($xpath->query('//table/tbody/tr[td/a[normalize-space(.)="COUNT-01"]]/td[4]')->item(0)->textContent));
+        }
+
+        Services::resetSingle('pager');
+        $response = $this->get('/en/admin/exam-voucher-batches?q=COUNT-&sort=identifier&direction=ASC&page=2');
+        $response->assertOK();
+        $document = new DOMDocument();
+        @$document->loadHTML('<?xml encoding="UTF-8">' . $response->response()->getBody());
+        $xpath = new DOMXPath($document);
+        $this->assertSame(3, $xpath->query('//table/tbody/tr')->length);
+        $this->assertSame('0', trim($xpath->query('//table/tbody/tr[td/a[normalize-space(.)="COUNT-20"]]/td[4]')->item(0)->textContent));
+        $this->assertSame('1', trim($xpath->query('//table/tbody/tr[td/a[normalize-space(.)="COUNT-21"]]/td[4]')->item(0)->textContent));
+        $this->assertSame('0', trim($xpath->query('//table/tbody/tr[td/a[normalize-space(.)="COUNT-22"]]/td[4]')->item(0)->textContent));
+
+        Services::resetSingle('pager');
+        $response = $this->get('/en/admin/exam-voucher-batches?q=NO-SUCH-BATCH');
+        $document = new DOMDocument();
+        @$document->loadHTML('<?xml encoding="UTF-8">' . $response->response()->getBody());
+        $this->assertSame(1, (new DOMXPath($document))->query('//table/tbody/tr/td[@colspan="5"]')->length);
     }
 
     public function testPurchaseDateLabelsAndInvalidInputAreDisplayed(): void

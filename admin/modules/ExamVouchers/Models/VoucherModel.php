@@ -20,6 +20,26 @@ class VoucherModel extends Model
             ->findAll();
     }
 
+    public function countsByBatch(array $batchIds): array
+    {
+        if ($batchIds === []) {
+            return [];
+        }
+
+        $rows = $this->db->table($this->table)
+            ->select('batch_id, COUNT(*) AS voucher_count')
+            ->whereIn('batch_id', $batchIds)
+            ->groupBy('batch_id')
+            ->get()->getResultArray();
+        $counts = [];
+
+        foreach ($rows as $row) {
+            $counts[$row['batch_id']] = (int) $row['voucher_count'];
+        }
+
+        return $counts;
+    }
+
     public function saveNote(int $voucherId, ?string $note): bool
     {
         $this->db->table($this->table)->where('id', $voucherId)->update(['note' => $note]);

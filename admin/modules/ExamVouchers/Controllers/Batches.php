@@ -10,6 +10,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use CodeIgniter\RESTful\ResourcePresenter;
 use Geminus\Admin\Libraries\DataManagement\ListQuery;
 use Modules\ExamVouchers\Models\BatchModel;
+use Modules\ExamVouchers\Models\VoucherModel;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -23,12 +24,14 @@ class Batches extends ResourcePresenter
 
     public function index(): string
     {
-        $query = new ListQuery($this->request->getGet(), ['id' => 'id', 'identifier' => 'identifier', 'issuer' => 'issuer', 'purchased_on' => 'purchased_on'], 'id');
-        $model = $query->apply(new BatchModel(), ['identifier', 'issuer']);
+        $query   = new ListQuery($this->request->getGet(), ['id' => 'id', 'identifier' => 'identifier', 'issuer' => 'issuer', 'purchased_on' => 'purchased_on'], 'id');
+        $model   = $query->apply(new BatchModel(), ['identifier', 'issuer']);
+        $batches = $model->paginate($query->perPage);
 
         return view('Modules\ExamVouchers\Views\index', [
-            'me'      => auth()->user(), 'page_title' => lang('ExamVouchers.title'), 'query' => $query,
-            'batches' => $model->paginate($query->perPage), 'pager' => $model->pager,
+            'me'            => auth()->user(), 'page_title' => lang('ExamVouchers.title'), 'query' => $query,
+            'batches'       => $batches, 'pager' => $model->pager,
+            'voucherCounts' => (new VoucherModel())->countsByBatch(array_column($batches, 'id')),
         ]);
     }
 

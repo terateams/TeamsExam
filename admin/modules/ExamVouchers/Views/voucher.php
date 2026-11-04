@@ -10,6 +10,7 @@
 <?= $this->section('content') ?>
     <div class="card"><div class="card-body">
         <dl>
+            <dt><?= esc(lang('ExamVouchers.voucherNumber')) ?></dt><dd>#<?= esc($voucher['id']) ?></dd>
             <dt><?= esc(lang('ExamVouchers.identifier')) ?></dt><dd class="text-break"><?= esc($voucher['identifier']) ?></dd>
             <dt><?= esc(lang('ExamVouchers.issuer')) ?></dt><dd class="text-break"><?= esc($voucher['issuer']) ?></dd>
             <dt><?= esc(lang('ExamVouchers.exam')) ?></dt><dd class="text-break"><?= esc($voucher['exam'] ?? '') ?></dd>

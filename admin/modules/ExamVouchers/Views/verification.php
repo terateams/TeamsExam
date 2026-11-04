@@ -9,6 +9,7 @@
 
 <?= $this->section('content') ?>
     <div class="card"><div class="card-body">
+        <p><?= esc(lang('ExamVouchers.voucherNumber')) ?>: #<?= esc($voucher['id']) ?></p>
         <form method="post" action="<?= route_to('admin/exam-vouchers/verification/store', $voucher['id']) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="version" value="<?= esc($voucher['verification_version'], 'attr') ?>">

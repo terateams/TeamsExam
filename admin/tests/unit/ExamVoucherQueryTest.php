@@ -126,6 +126,50 @@ final class ExamVoucherQueryTest extends CIUnitTestCase
         }
     }
 
+    public function testVoucherNumbersIdentifyListRowsAndIndividualPages(): void
+    {
+        $first  = $this->voucher('NUMBER-ONE', 'Issuer', 'number-secret-one', 'Exam', 'Region');
+        $second = $this->voucher('NUMBER-TWO', 'Issuer', 'number-secret-two', 'Exam', 'Region');
+        $db     = db_connect();
+        $batch  = $db->table('exam_vouchers')->where('id', $first)->get()->getRowArray()['batch_id'];
+        $db->table('exam_vouchers')->where('id', $second)->update(['batch_id' => $batch]);
+        $this->loginAs(['exam-vouchers.manage']);
+
+        foreach (['en' => 'Voucher number', 'zh-Hans' => '考试券编号', 'zh-Hant' => '考試券編號'] as $locale => $label) {
+            $list = $this->get("/{$locale}/admin/exam-vouchers?batch={$batch}");
+            $list->assertOK();
+            $html = $list->response()->getBody();
+            $this->assertStringNotContainsString('number-secret-one', $html);
+            $this->assertStringNotContainsString('number-secret-two', $html);
+            $document = new DOMDocument();
+            $document->loadHTML($html, LIBXML_NOERROR | LIBXML_NOWARNING);
+            $xpath = new DOMXPath($document);
+            $this->assertSame($label, trim($xpath->query('//table/thead/tr/th[1]')->item(0)->textContent));
+
+            foreach ([$first, $second] as $id) {
+                $rows = $xpath->query("//table/tbody/tr[td//a[@href='/{$locale}/admin/exam-vouchers/{$id}']]");
+                $this->assertSame(1, $rows->length);
+                $this->assertSame("#{$id}", trim($xpath->query('./td[1]', $rows->item(0))->item(0)->textContent));
+                $detail = $this->get("/{$locale}/admin/exam-vouchers/{$id}");
+                $detail->assertOK();
+                $detailDocument = new DOMDocument();
+                $detailDocument->loadHTML($detail->response()->getBody(), LIBXML_NOERROR | LIBXML_NOWARNING);
+                $detailXPath = new DOMXPath($detailDocument);
+                $number      = $detailXPath->query("//dt[text()='{$label}']/following-sibling::dd[1]");
+                $this->assertSame(1, $number->length);
+                $this->assertSame("#{$id}", trim($number->item(0)->textContent));
+
+                foreach (['assign', 'verification', 'note'] as $action) {
+                    $page = $this->get("/{$locale}/admin/exam-vouchers/{$id}/{$action}");
+                    $page->assertOK();
+                    $this->assertStringContainsString("{$label}: #{$id}", $page->response()->getBody());
+                    $this->assertStringNotContainsString('number-secret-one', $page->response()->getBody());
+                    $this->assertStringNotContainsString('number-secret-two', $page->response()->getBody());
+                }
+            }
+        }
+    }
+
     public function testDirectUrlsRequirePermission(): void
     {
         $id = $this->voucher('ACCESS', 'Issuer', 'private-code', 'Exam', 'Region');

@@ -21,7 +21,7 @@ return [
     'invalidCode'         => '券碼無效。', 'invalidExam' => '適用考試無效。',
     'invalidRegion'       => '適用地區無效。', 'invalidDate' => '有效期無效，請使用 YYYY-MM-DD。',
     'duplicateCode'       => '券碼重複。', 'notImported' => '其他列有誤，未匯入。',
-    'vouchers'            => '考試券', 'voucherDetail' => '查看考試券', 'code' => '券碼',
+    'vouchers'            => '考試券', 'voucherDetail' => '查看考試券', 'voucherNumber' => '考試券編號', 'code' => '券碼',
     'exam'                => '適用考試', 'region' => '適用地區', 'expiresOn' => '有效期',
     'voucherSearch'       => '搜尋批次、發券方、考試或地區', 'vouchersEmpty' => '目前沒有考試券。',
     'vouchersNoResults'   => '沒有符合的考試券。', 'decryptFailed' => '無法解密考試券，請聯絡管理員。',

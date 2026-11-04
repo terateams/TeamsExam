@@ -21,7 +21,7 @@ return [
     'invalidCode'         => 'Invalid voucher code.', 'invalidExam' => 'Invalid exam.',
     'invalidRegion'       => 'Invalid region.', 'invalidDate' => 'Invalid expiry date; use YYYY-MM-DD.',
     'duplicateCode'       => 'Duplicate voucher code.', 'notImported' => 'Not imported because another row failed.',
-    'vouchers'            => 'Exam vouchers', 'voucherDetail' => 'View voucher', 'code' => 'Voucher code',
+    'vouchers'            => 'Exam vouchers', 'voucherDetail' => 'View voucher', 'voucherNumber' => 'Voucher number', 'code' => 'Voucher code',
     'exam'                => 'Exam', 'region' => 'Region', 'expiresOn' => 'Expiry date',
     'voucherSearch'       => 'Search batch, issuer, exam or region', 'vouchersEmpty' => 'No vouchers yet.',
     'vouchersNoResults'   => 'No matching vouchers.', 'decryptFailed' => 'Could not decrypt the voucher. Contact an administrator.',

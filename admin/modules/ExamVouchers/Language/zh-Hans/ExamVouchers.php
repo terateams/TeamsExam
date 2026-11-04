@@ -21,7 +21,7 @@ return [
     'invalidCode'         => '券码无效。', 'invalidExam' => '适用考试无效。',
     'invalidRegion'       => '适用地区无效。', 'invalidDate' => '有效期无效，请使用 YYYY-MM-DD。',
     'duplicateCode'       => '券码重复。', 'notImported' => '其他行有误，未导入。',
-    'vouchers'            => '考试券', 'voucherDetail' => '查看考试券', 'code' => '券码',
+    'vouchers'            => '考试券', 'voucherDetail' => '查看考试券', 'voucherNumber' => '考试券编号', 'code' => '券码',
     'exam'                => '适用考试', 'region' => '适用地区', 'expiresOn' => '有效期',
     'voucherSearch'       => '搜索批次、发券方、考试或地区', 'vouchersEmpty' => '暂无考试券。',
     'vouchersNoResults'   => '没有匹配的考试券。', 'decryptFailed' => '无法解密考试券，请联系管理员。',

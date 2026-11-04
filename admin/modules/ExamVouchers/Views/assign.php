@@ -9,6 +9,7 @@
 
 <?= $this->section('content') ?>
     <div class="card"><div class="card-body">
+        <p><?= esc(lang('ExamVouchers.voucherNumber')) ?>: #<?= esc($voucher['id']) ?></p>
         <?php if ($voucher['recipient_id'] !== null): ?>
             <p><?= esc(lang('ExamVouchers.alreadyAssigned')) ?></p>
         <?php else: ?>

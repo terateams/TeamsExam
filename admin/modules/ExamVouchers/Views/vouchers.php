@@ -36,6 +36,7 @@
         <div class="table-responsive">
             <table class="table card-table table-vcenter">
                 <thead><tr>
+                    <th scope="col"><?= esc(lang('ExamVouchers.voucherNumber')) ?></th>
                     <th scope="col"><?= esc(lang('ExamVouchers.identifier')) ?></th>
                     <th scope="col"><?= esc(lang('ExamVouchers.issuer')) ?></th>
                     <th scope="col"><?= esc(lang('ExamVouchers.exam')) ?></th>
@@ -48,6 +49,7 @@
                 <tbody>
                     <?php foreach ($vouchers as $voucher): ?>
                         <tr>
+                            <td>#<?= esc($voucher['id']) ?></td>
                             <td class="text-break"><?= esc($voucher['identifier']) ?></td>
                             <td class="text-break"><?= esc($voucher['issuer']) ?></td>
                             <td class="text-break"><?= esc($voucher['exam'] ?? '') ?></td>
@@ -63,7 +65,7 @@
                         </tr>
                     <?php endforeach; ?>
                     <?php if ($vouchers === []): ?>
-                        <tr><td colspan="8"><?= view_cell('Geminus\Admin\Cells\EmptyStateCell', ['message' => lang($query->search === '' && $batch === '' ? 'ExamVouchers.vouchersEmpty' : 'ExamVouchers.vouchersNoResults'), 'filtered' => $query->search !== '' || $batch !== '', 'clearUrl' => route_to('admin/exam-vouchers'), 'clearLabel' => lang('Admin.userClear')]) ?></td></tr>
+                        <tr><td colspan="9"><?= view_cell('Geminus\Admin\Cells\EmptyStateCell', ['message' => lang($query->search === '' && $batch === '' ? 'ExamVouchers.vouchersEmpty' : 'ExamVouchers.vouchersNoResults'), 'filtered' => $query->search !== '' || $batch !== '', 'clearUrl' => route_to('admin/exam-vouchers'), 'clearLabel' => lang('Admin.userClear')]) ?></td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

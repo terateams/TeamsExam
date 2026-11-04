@@ -23,7 +23,7 @@ class Batches extends ResourcePresenter
 
     public function index(): string
     {
-        $query = new ListQuery($this->request->getGet(), ['id' => 'id', 'identifier' => 'identifier', 'issuer' => 'issuer'], 'id');
+        $query = new ListQuery($this->request->getGet(), ['id' => 'id', 'identifier' => 'identifier', 'issuer' => 'issuer', 'purchased_on' => 'purchased_on'], 'id');
         $model = $query->apply(new BatchModel(), ['identifier', 'issuer']);
 
         return view('Modules\ExamVouchers\Views\index', [
@@ -109,15 +109,19 @@ class Batches extends ResourcePresenter
         }
         $input = $this->request->getPost();
 
-        foreach (['identifier', 'issuer'] as $field) {
+        foreach (['identifier', 'issuer', 'purchased_on'] as $field) {
             if (isset($input[$field]) && is_string($input[$field])) {
                 $input[$field] = trim($input[$field]);
             }
         }
+        if (($input['purchased_on'] ?? null) === '') {
+            $input['purchased_on'] = null;
+        }
         $validation = service('validation');
         $validation->setRules([
-            'identifier' => ['label' => 'ExamVouchers.identifier', 'rules' => 'required|string|max_length[150]|regex_match[/\A[^\x00]*\z/u]|is_unique[exam_voucher_batches.identifier,id,' . ($id ?? 0) . ']'],
-            'issuer'     => ['label' => 'ExamVouchers.issuer', 'rules' => 'required|string|max_length[150]|regex_match[/\A[^\x00]*\z/u]'],
+            'identifier'   => ['label' => 'ExamVouchers.identifier', 'rules' => 'required|string|max_length[150]|regex_match[/\A[^\x00]*\z/u]|is_unique[exam_voucher_batches.identifier,id,' . ($id ?? 0) . ']'],
+            'issuer'       => ['label' => 'ExamVouchers.issuer', 'rules' => 'required|string|max_length[150]|regex_match[/\A[^\x00]*\z/u]'],
+            'purchased_on' => ['label' => 'ExamVouchers.purchasedOn', 'rules' => 'permit_empty|string|regex_match[/\A(?!0000)[0-9]{4}-[0-9]{2}-[0-9]{2}\z/]|valid_date[Y-m-d]'],
         ]);
         $back = $id === null ? route_to('admin/exam-voucher-batches/new') : route_to('admin/exam-voucher-batches/edit', $id);
         if (! $validation->run($input)) {

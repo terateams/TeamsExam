@@ -10,7 +10,7 @@ class BatchModel extends Model
 {
     protected $table         = 'exam_voucher_batches';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['identifier', 'issuer'];
+    protected $allowedFields = ['identifier', 'issuer', 'purchased_on'];
     protected $useTimestamps = true;
     protected $returnType    = 'array';
 }

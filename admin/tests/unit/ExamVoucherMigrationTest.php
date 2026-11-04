@@ -13,6 +13,19 @@ final class ExamVoucherMigrationTest extends CIUnitTestCase
 
     protected $namespace;
 
+    public function testBatchMigrationCreatesNullablePurchaseDate(): void
+    {
+        $this->db->table('exam_voucher_batches')->insert(['identifier' => 'B-NULL', 'issuer' => 'Supplier']);
+        $batch = $this->db->table('exam_voucher_batches')->where('identifier', 'B-NULL')->get()->getRowArray();
+        $this->assertNull($batch['purchased_on']);
+        $column = $this->db->query(
+            'SELECT data_type, is_nullable FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = ? AND column_name = ?',
+            [$this->db->prefixTable('exam_voucher_batches'), 'purchased_on'],
+        )->getRowArray();
+        $this->assertSame('date', $column['data_type']);
+        $this->assertSame('YES', $column['is_nullable']);
+    }
+
     public function testMigrationRecreatesColumnsAndConstraints(): void
     {
         $migration = new CreateExamVouchers();

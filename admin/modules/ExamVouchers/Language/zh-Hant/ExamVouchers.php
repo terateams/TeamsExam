@@ -4,6 +4,7 @@ return [
     'menu'                => '考試券管理', 'voucherList' => '考試券列表',
     'title'               => '考試券採購批次', 'batch' => '採購批次', 'create' => '新增批次',
     'edit'                => '編輯批次', 'identifier' => '批次標識', 'issuer' => '發券方',
+    'purchasedOn'         => '採購日期',
     'save'                => '儲存', 'cancel' => '取消', 'saved' => '批次已儲存。',
     'saveFailed'          => '無法儲存批次。', 'delete' => '刪除批次',
     'deleteConfirm'       => '刪除此批次？', 'deleteWarning' => '此操作無法復原。',

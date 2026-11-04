@@ -8,7 +8,7 @@
 
 | 概念或关系 | 定义 |
 | --- | --- |
-| 采购批次 | 用于归集所采购考试券的批次，记录批次标识和发券方 |
+| 采购批次 | 用于归集所采购考试券的批次，记录批次标识、发券方和可选的采购日期 |
 | 考试券 | 属于一个采购批次，可分发给一个接收用户的券 |
 | 接收用户 | 由内部人员确认其学员身份并登记为考试券接收人的现有用户 |
 | 已分发 | 考试券已登记接收用户 |
@@ -44,6 +44,7 @@ erDiagram
         int id PK
         varchar identifier UK
         varchar issuer
+        date purchased_on
         datetime created_at
         datetime updated_at
     }

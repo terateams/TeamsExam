@@ -4,6 +4,7 @@ return [
     'menu'                => 'Exam voucher management', 'voucherList' => 'Exam voucher list',
     'title'               => 'Exam voucher batches', 'batch' => 'Purchase batch', 'create' => 'New batch',
     'edit'                => 'Edit batch', 'identifier' => 'Batch identifier', 'issuer' => 'Issuer',
+    'purchasedOn'         => 'Purchase date',
     'save'                => 'Save', 'cancel' => 'Cancel', 'saved' => 'Batch saved.',
     'saveFailed'          => 'Could not save the batch.', 'delete' => 'Delete batch',
     'deleteConfirm'       => 'Delete this batch?', 'deleteWarning' => 'This action cannot be undone.',

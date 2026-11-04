@@ -35,6 +35,7 @@
     </div>
     <div class="card"><div class="card-body">
         <dl><dt><?= esc(lang('ExamVouchers.identifier')) ?></dt><dd class="text-break"><?= esc($batch['identifier']) ?></dd>
-        <dt><?= esc(lang('ExamVouchers.issuer')) ?></dt><dd class="text-break"><?= esc($batch['issuer']) ?></dd></dl>
+        <dt><?= esc(lang('ExamVouchers.issuer')) ?></dt><dd class="text-break"><?= esc($batch['issuer']) ?></dd>
+        <dt><?= esc(lang('ExamVouchers.purchasedOn')) ?></dt><dd><?= esc($batch['purchased_on'] ?? '-') ?></dd></dl>
     </div></div>
 <?= $this->endSection() ?>

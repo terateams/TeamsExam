@@ -11,11 +11,12 @@ class CreateExamVoucherBatches extends Migration
     public function up(): void
     {
         $this->forge->addField([
-            'id'         => ['type' => 'INT', 'auto_increment' => true],
-            'identifier' => ['type' => 'VARCHAR', 'constraint' => 150],
-            'issuer'     => ['type' => 'VARCHAR', 'constraint' => 150],
-            'created_at' => ['type' => 'DATETIME', 'null' => true],
-            'updated_at' => ['type' => 'DATETIME', 'null' => true],
+            'id'           => ['type' => 'INT', 'auto_increment' => true],
+            'identifier'   => ['type' => 'VARCHAR', 'constraint' => 150],
+            'issuer'       => ['type' => 'VARCHAR', 'constraint' => 150],
+            'purchased_on' => ['type' => 'DATE', 'null' => true],
+            'created_at'   => ['type' => 'DATETIME', 'null' => true],
+            'updated_at'   => ['type' => 'DATETIME', 'null' => true],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->addUniqueKey('identifier');

@@ -27,16 +27,22 @@ class VoucherAssignments extends ResourcePresenter
             return $this->response->setStatusCode(404);
         }
 
-        $search = $this->request->getGet('username');
-        $search = is_string($search) ? trim($search) : '';
-        $user   = null;
+        $search    = $this->request->getGet('username');
+        $search    = is_string($search) ? trim($search) : '';
+        $users     = [];
+        $moreUsers = false;
         if ($voucher['recipient_id'] === null && $search !== '' && mb_strlen($search) <= 30) {
-            $user = auth()->getProvider()->select('id, username')->asArray()->where('username', $search)->first();
+            $escape = db_connect()->likeEscapeChar;
+            $match  = strtr($search, [$escape => $escape . $escape, '%' => $escape . '%', '_' => $escape . '_']);
+            $users  = auth()->getProvider()->select('id, username, avatar')
+                ->like('username', $match, 'both', null, true)->orderBy('username')->findAll(21);
+            $moreUsers = count($users) > 20;
+            $users     = array_slice($users, 0, 20);
         }
 
         return view('Modules\ExamVouchers\Views\assign', [
             'me'     => auth()->user(), 'page_title' => lang('ExamVouchers.assign'), 'voucher' => $voucher,
-            'search' => $search, 'user' => $user,
+            'search' => $search, 'users' => $users, 'moreUsers' => $moreUsers,
         ]);
     }
 

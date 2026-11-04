@@ -112,6 +112,70 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         }
     }
 
+    public function testPartialUsernameSearchListsMatchingActiveUsers(): void
+    {
+        $voucher   = $this->voucher();
+        $first     = $this->user('search-student-one');
+        $second    = $this->user('search-student-two');
+        $unrelated = $this->user('another-user');
+        $deleted   = $this->user('search-student-deleted');
+        db_connect()->table('users')->where('id', $first)->update(['avatar' => 'student-avatar.png']);
+        auth()->getProvider()->delete($deleted);
+        $this->loginAs('search-manager', ['exam-vouchers.manage']);
+        $path = '/en/admin/exam-vouchers/' . $voucher . '/assign';
+
+        $page = $this->get($path . '?username=STUDENT')->response()->getBody();
+        $this->assertStringContainsString('>search-student-one</option>', $page);
+        $this->assertStringContainsString('>search-student-two</option>', $page);
+        $this->assertStringContainsString('<option value="' . $first . '" data-custom-properties=', $page);
+        $this->assertStringContainsString('<option value="' . $second . '" data-custom-properties=', $page);
+        $this->assertStringNotContainsString('<option value="' . $unrelated . '"', $page);
+        $this->assertStringNotContainsString('<option value="' . $deleted . '"', $page);
+        $this->assertStringContainsString('name="recipient_id" required', $page);
+        $this->assertStringContainsString('Confirm the selected account belongs to the student', $page);
+        $document = new DOMDocument();
+        $this->assertTrue($document->loadHTML($page, LIBXML_NOERROR | LIBXML_NOWARNING));
+        $xpath         = new DOMXPath($document);
+        $withAvatar    = $xpath->query('//select[@id="recipient"]/option[@value="' . $first . '"]')->item(0)->getAttribute('data-custom-properties');
+        $withoutAvatar = $xpath->query('//select[@id="recipient"]/option[@value="' . $second . '"]')->item(0)->getAttribute('data-custom-properties');
+        $this->assertStringContainsString('class="avatar"', $withAvatar);
+        $this->assertStringContainsString('/admin/avatars/' . $first, html_entity_decode($withAvatar, ENT_QUOTES | ENT_HTML5));
+        $this->assertStringContainsString('class="avatar"', $withoutAvatar);
+        $this->assertStringContainsString('>se</span>', $withoutAvatar);
+
+        $empty = $this->get($path)->response()->getBody();
+        $this->assertStringNotContainsString('<option value="' . $first . '"', $empty);
+        $literal = $this->get($path . '?username=%25')->response()->getBody();
+        $this->assertStringNotContainsString('<option value="' . $first . '"', $literal);
+        $this->assertStringContainsString('No matching internal account', $literal);
+
+        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $second])->assertRedirect();
+        $this->assertSame($second, (int) $this->recipient($voucher));
+        $assigned = $this->get($path . '?username=student')->response()->getBody();
+        $this->assertStringNotContainsString('name="recipient_id"', $assigned);
+        $this->assertStringNotContainsString('tom-select.base.min.js', $assigned);
+    }
+
+    public function testSearchLimitsResultsAndPromptsToRefine(): void
+    {
+        $voucher = $this->voucher();
+
+        for ($i = 0; $i < 21; $i++) {
+            $this->user(sprintf('limit-student-%02d', $i));
+        }
+        $this->loginAs('limit-manager', ['exam-vouchers.manage']);
+        $path = '/en/admin/exam-vouchers/' . $voucher . '/assign';
+
+        $page = $this->get($path . '?username=limit-student')->response()->getBody();
+        $this->assertSame(20, substr_count($page, 'data-custom-properties='));
+        $this->assertStringContainsString('Only the first 20 matches', $page);
+        $this->assertStringNotContainsString('>limit-student-20</option>', $page);
+
+        $narrowed = $this->get($path . '?username=limit-student-20')->response()->getBody();
+        $this->assertStringContainsString('>limit-student-20</option>', $narrowed);
+        $this->assertStringNotContainsString('Only the first 20 matches', $narrowed);
+    }
+
     public function testConcurrentUpdatesAllowOnlyOneWinner(): void
     {
         $voucher    = $this->voucher();

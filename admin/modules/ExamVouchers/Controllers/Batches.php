@@ -34,7 +34,7 @@ class Batches extends ResourcePresenter
 
     public function new(): string
     {
-        return $this->form([], route_to('admin/exam-voucher-batches/create'));
+        return $this->form([], route_to('admin/exam-voucher-batches/create'), (new BatchModel())->suggestIdentifier());
     }
 
     public function create(): RedirectResponse
@@ -93,11 +93,11 @@ class Batches extends ResourcePresenter
         return redirect()->to(route_to('admin/exam-voucher-batches'))->with('alert', ['type' => 'success', 'message' => lang('ExamVouchers.deleted')]);
     }
 
-    private function form(array $batch, string $action): string
+    private function form(array $batch, string $action, ?string $suggestedIdentifier = null): string
     {
         return view('Modules\ExamVouchers\Views\form', [
             'me'    => auth()->user(), 'page_title' => lang($batch === [] ? 'ExamVouchers.create' : 'ExamVouchers.edit'),
-            'batch' => $batch, 'formAction' => $action,
+            'batch' => $batch, 'formAction' => $action, 'suggestedIdentifier' => $suggestedIdentifier,
         ]);
     }
 

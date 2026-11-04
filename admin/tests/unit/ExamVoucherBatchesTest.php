@@ -103,6 +103,89 @@ final class ExamVoucherBatchesTest extends CIUnitTestCase
         $this->assertNull($model->find($batch['id']));
     }
 
+    public function testNewBatchSuggestsAvailableEditableIdentifier(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+        $model = new BatchModel();
+        $this->get('/en/admin/exam-voucher-batches/new')->assertSee('value="BATCH-000001"');
+        $id = $model->insert(['identifier' => 'BATCH-000001', 'issuer' => 'Supplier']);
+        $model->insert(['identifier' => 'BATCH-000003', 'issuer' => 'Supplier']);
+        $model->insert(['identifier' => 'CUSTOM', 'issuer' => 'Supplier']);
+        $model->insert(['identifier' => 'BATCH-ABC', 'issuer' => 'Supplier']);
+        $model->insert(['identifier' => 'BATCH-123', 'issuer' => 'Supplier']);
+        $model->insert(['identifier' => 'BATCH-00000012', 'issuer' => 'Supplier']);
+
+        $response = $this->get('/en/admin/exam-voucher-batches/new');
+        $response->assertSee('value="BATCH-000004"');
+        $response->assertSee('New batch');
+        $this->get('/en/admin/exam-voucher-batches/edit/' . $id)->assertSee('value="BATCH-000001"');
+        $model->delete($id);
+        $this->get('/en/admin/exam-voucher-batches/new')->assertSee('value="BATCH-000004"');
+
+        $this->post('/en/admin/exam-voucher-batches/create', [
+            csrf_token() => csrf_hash(), 'identifier' => 'MY-BATCH', 'issuer' => 'Supplier',
+        ])->assertRedirect();
+        $this->assertNotNull($model->where('identifier', 'MY-BATCH')->first());
+    }
+
+    public function testSuggestedIdentifierContinuesBeyondSixDigits(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+        $model = new BatchModel();
+        $model->insert(['identifier' => 'BATCH-999999', 'issuer' => 'Supplier']);
+        $this->get('/en/admin/exam-voucher-batches/new')->assertSee('value="BATCH-1000000"');
+        $id = $model->insert(['identifier' => 'BATCH-1000000', 'issuer' => 'Supplier']);
+        $this->get('/en/admin/exam-voucher-batches/new')->assertSee('value="BATCH-1000001"');
+        $model->delete($id);
+        $this->get('/en/admin/exam-voucher-batches/new')->assertSee('value="BATCH-1000000"');
+    }
+
+    public function testSuggestedIdentifierRejectsExceedingFieldLength(): void
+    {
+        $model = new BatchModel();
+        $model->insert(['identifier' => 'BATCH-' . str_repeat('9', 143), 'issuer' => 'Supplier']);
+        $this->assertSame('BATCH-1' . str_repeat('0', 143), $model->suggestIdentifier());
+
+        $model->insert(['identifier' => 'BATCH-' . str_repeat('9', 144), 'issuer' => 'Supplier']);
+        $this->expectException(OverflowException::class);
+        $model->suggestIdentifier();
+    }
+
+    public function testDuplicateSuggestedIdentifierPreservesInputAndRejectsSave(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+        $model = new BatchModel();
+        $this->get('/en/admin/exam-voucher-batches/new')->assertSee('value="BATCH-000001"');
+        $model->insert(['identifier' => 'BATCH-000001', 'issuer' => 'Other supplier']);
+
+        $this->post('/en/admin/exam-voucher-batches/create', [
+            csrf_token() => csrf_hash(), 'identifier' => 'BATCH-000001', 'issuer' => 'Supplier',
+        ])->assertRedirectTo('/en/admin/exam-voucher-batches/new');
+        $this->assertArrayHasKey('identifier', session('errors'));
+        $this->assertSame('BATCH-000001', session('_ci_old_input')['post']['identifier']);
+        $this->assertSame(1, $model->countAllResults());
+
+        $response = $this->withSession($_SESSION)->get('/en/admin/exam-voucher-batches/new');
+        $response->assertSee('value="BATCH-000001"');
+        $response->assertSee('is-invalid');
+    }
+
+    public function testEmptyIdentifierIsPreservedAfterValidationFails(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+        $this->post('/en/admin/exam-voucher-batches/create', [
+            csrf_token() => csrf_hash(), 'identifier' => '', 'issuer' => 'Supplier',
+        ])->assertRedirectTo('/en/admin/exam-voucher-batches/new');
+        $this->assertArrayHasKey('identifier', session('errors'));
+        $this->assertSame('', session('_ci_old_input')['post']['identifier']);
+
+        $response = $this->withSession($_SESSION)->get('/en/admin/exam-voucher-batches/new');
+        $document = new DOMDocument();
+        @$document->loadHTML('<?xml encoding="UTF-8">' . $response->response()->getBody());
+        $xpath = new DOMXPath($document);
+        $this->assertSame('', $xpath->query('//input[@name="identifier"]')->item(0)->getAttribute('value'));
+    }
+
     public function testInvalidAndDuplicateIdentifiersDoNotChangeData(): void
     {
         $this->loginAs(['exam-vouchers.manage']);

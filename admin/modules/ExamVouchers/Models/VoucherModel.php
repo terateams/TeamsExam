@@ -50,8 +50,8 @@ class VoucherModel extends Model
     public function inventoryCounts(): array
     {
         $row = $this->db->table($this->table)
-            ->select('COUNT(*) FILTER (WHERE recipient_id IS NULL) AS unassigned', false)
-            ->select('COUNT(*) FILTER (WHERE recipient_id IS NOT NULL) AS assigned', false)
+            ->select('COUNT(*) FILTER (WHERE recipient_type IS NULL) AS unassigned', false)
+            ->select('COUNT(*) FILTER (WHERE recipient_type IS NOT NULL) AS assigned', false)
             ->select('COUNT(*) FILTER (WHERE verification_note IS NOT NULL) AS verified', false)
             ->get()->getRowArray();
 
@@ -78,8 +78,19 @@ class VoucherModel extends Model
         $vouchers = $this->db->protectIdentifiers($this->db->prefixTable('exam_vouchers'));
         $users    = $this->db->protectIdentifiers($this->db->prefixTable('users'));
         $this->db->query(
-            "UPDATE {$vouchers} SET recipient_id = ? WHERE id = ? AND recipient_id IS NULL AND EXISTS (SELECT 1 FROM {$users} WHERE id = ? AND deleted_at IS NULL)",
+            "UPDATE {$vouchers} SET recipient_id = ?, recipient_type = 'internal' WHERE id = ? AND recipient_type IS NULL AND EXISTS (SELECT 1 FROM {$users} WHERE id = ? AND deleted_at IS NULL)",
             [$recipientId, $voucherId, $recipientId],
+        );
+
+        return $this->db->affectedRows() === 1;
+    }
+
+    public function assignExternalRecipient(int $voucherId, string $name, string $email): bool
+    {
+        $vouchers = $this->db->protectIdentifiers($this->db->prefixTable('exam_vouchers'));
+        $this->db->query(
+            "UPDATE {$vouchers} SET recipient_type = 'external', recipient_name = ?, recipient_email = ? WHERE id = ? AND recipient_type IS NULL",
+            [trim($name), trim($email), $voucherId],
         );
 
         return $this->db->affectedRows() === 1;

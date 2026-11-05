@@ -1,7 +1,7 @@
 <?= $this->extend('Geminus\Admin\Views\layout_main') ?>
 
 <?= $this->section('head') ?>
-    <?php if ($voucher['recipient_id'] === null): ?>
+    <?php if ($voucher['recipient_type'] === null): ?>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.6.1/dist/libs/tom-select/dist/css/tom-select.bootstrap5.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.6.1/dist/css/tabler-vendors.min.css">
         <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.6.1/dist/libs/tom-select/dist/js/tom-select.base.min.js"></script>
@@ -18,7 +18,7 @@
 <?= $this->section('content') ?>
     <div class="card"><div class="card-body">
         <p><?= esc(lang('ExamVouchers.voucherNumber')) ?>: #<?= esc($voucher['id']) ?></p>
-        <?php if ($voucher['recipient_id'] !== null): ?>
+        <?php if ($voucher['recipient_type'] !== null): ?>
             <p><?= esc(lang('ExamVouchers.alreadyAssigned')) ?></p>
         <?php else: ?>
             <form id="recipient-search" method="get" action="<?= route_to('admin/exam-vouchers/assign', $voucher['id']) ?>">
@@ -31,6 +31,8 @@
             </form>
             <form method="post" action="<?= route_to('admin/exam-vouchers/assign/store', $voucher['id']) ?>" class="mt-3">
                 <?= csrf_field() ?>
+                <input type="hidden" name="recipient_type" value="internal">
+                <h3><?= esc(lang('ExamVouchers.internalRecipient')) ?></h3>
                 <div class="mb-3">
                     <label class="form-label" for="recipient"><?= esc(lang('ExamVouchers.recipient')) ?></label>
                     <select class="form-select" id="recipient" name="recipient_id" required aria-describedby="recipient-hint recipient-status" data-placeholder="<?= esc(lang('ExamVouchers.selectRecipient'), 'attr') ?>">
@@ -47,12 +49,28 @@
                 </div>
                 <button class="btn btn-primary" type="submit"><i class="ti ti-user-check me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.confirmAssign')) ?></button>
             </form>
+            <hr>
+            <form method="post" action="<?= route_to('admin/exam-vouchers/assign/store', $voucher['id']) ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="recipient_type" value="external">
+                <h3><?= esc(lang('ExamVouchers.externalRecipient')) ?></h3>
+                <p class="text-secondary"><?= esc(lang('ExamVouchers.externalRecipientHint')) ?></p>
+                <div class="mb-3">
+                    <label class="form-label" for="recipient-name"><?= esc(lang('ExamVouchers.recipientName')) ?></label>
+                    <input class="form-control" id="recipient-name" name="recipient_name" type="text" maxlength="255" autocomplete="name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="recipient-email"><?= esc(lang('ExamVouchers.recipientEmail')) ?></label>
+                    <input class="form-control" id="recipient-email" name="recipient_email" type="email" maxlength="254" autocomplete="email" required>
+                </div>
+                <button class="btn btn-primary" type="submit"><i class="ti ti-user-check me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.confirmAssign')) ?></button>
+            </form>
         <?php endif ?>
     </div></div>
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
-    <?php if ($voucher['recipient_id'] === null): ?>
+    <?php if ($voucher['recipient_type'] === null): ?>
         <script>
             (() => {
                 const form = document.getElementById('recipient-search');

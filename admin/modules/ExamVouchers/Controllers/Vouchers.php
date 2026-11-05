@@ -26,7 +26,7 @@ class Vouchers extends ResourcePresenter
     {
         $query = new ListQuery($this->request->getGet(), ['id' => 'exam_vouchers.id'], 'id');
         $model = new VoucherModel();
-        $model->select('exam_vouchers.id, exam_vouchers.batch_id, exam_vouchers.exam, exam_vouchers.region, exam_vouchers.expires_on, exam_vouchers.recipient_id, users.username AS recipient_username, exam_voucher_batches.identifier, exam_voucher_batches.issuer')
+        $model->select('exam_vouchers.id, exam_vouchers.batch_id, exam_vouchers.exam, exam_vouchers.region, exam_vouchers.expires_on, exam_vouchers.recipient_type, exam_vouchers.recipient_id, exam_vouchers.recipient_name, exam_vouchers.recipient_email, users.username AS recipient_username, exam_voucher_batches.identifier, exam_voucher_batches.issuer')
             ->select('CASE WHEN exam_vouchers.verification_note IS NULL THEN 0 ELSE 1 END AS usage_verified', false)
             ->join('exam_voucher_batches', 'exam_voucher_batches.id = exam_vouchers.batch_id')
             ->join('users', 'users.id = exam_vouchers.recipient_id', 'left');
@@ -50,7 +50,7 @@ class Vouchers extends ResourcePresenter
         $this->response->setHeader('Cache-Control', 'private, no-store, max-age=0');
         $this->response->setHeader('Pragma', 'no-cache');
         $voucher = (new VoucherModel())
-            ->select('exam_vouchers.id, exam_vouchers.code_ciphertext, exam_vouchers.exam, exam_vouchers.region, exam_vouchers.expires_on, exam_vouchers.recipient_id, users.username AS recipient_username, exam_voucher_batches.identifier, exam_voucher_batches.issuer')
+            ->select('exam_vouchers.id, exam_vouchers.code_ciphertext, exam_vouchers.exam, exam_vouchers.region, exam_vouchers.expires_on, exam_vouchers.recipient_type, exam_vouchers.recipient_id, exam_vouchers.recipient_name, exam_vouchers.recipient_email, users.username AS recipient_username, exam_voucher_batches.identifier, exam_voucher_batches.issuer')
             ->join('exam_voucher_batches', 'exam_voucher_batches.id = exam_vouchers.batch_id')
             ->join('users', 'users.id = exam_vouchers.recipient_id', 'left')
             ->where('exam_vouchers.id', (int) $id)->first();

@@ -50,11 +50,12 @@
                         <dd class="text-break mb-0"><?= esc($voucher['identifier']) ?></dd>
                     </dl>
                 </div>
-                <?php if ($voucher['recipient_id'] !== null): ?>
+                <?php if ($voucher['recipient_type'] !== null): ?>
                     <div class="col-12 col-md-6">
                         <dl class="mb-0">
                             <dt class="text-secondary"><?= esc(lang('ExamVouchers.recipient')) ?></dt>
-                            <dd class="text-break mb-0"><?= esc($voucher['recipient_username'] ?? '#' . $voucher['recipient_id']) ?></dd>
+                            <dd class="text-break mb-0"><?= esc($voucher['recipient_type'] === 'external' ? $voucher['recipient_name'] : ($voucher['recipient_username'] ?? '#' . $voucher['recipient_id'])) ?></dd>
+                            <?php if ($voucher['recipient_type'] === 'external'): ?><dd class="text-break text-secondary mb-0"><?= esc($voucher['recipient_email']) ?></dd><?php endif ?>
                         </dl>
                     </div>
                 <?php endif ?>

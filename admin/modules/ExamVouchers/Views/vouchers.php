@@ -56,16 +56,17 @@
                             <td class="text-break"><?= esc($voucher['region'] ?? '') ?></td>
                             <td><?= esc($voucher['expires_on']) ?></td>
                             <td>
-                                <?php if ($voucher['recipient_id'] === null): ?>
+                                <?php if ($voucher['recipient_type'] === null): ?>
                                     <span class="badge bg-yellow-lt"><?= esc(lang('ExamVouchers.unassigned')) ?></span>
                                 <?php else: ?>
                                     <span class="badge bg-green-lt"><?= esc(lang('ExamVouchers.assignedCount')) ?></span>
-                                    <div class="text-break mt-1"><?= esc($voucher['recipient_username'] ?? '#' . $voucher['recipient_id']) ?></div>
+                                    <div class="text-break mt-1"><?= esc($voucher['recipient_type'] === 'external' ? $voucher['recipient_name'] : ($voucher['recipient_username'] ?? '#' . $voucher['recipient_id'])) ?></div>
+                                    <?php if ($voucher['recipient_type'] === 'external'): ?><div class="text-break text-secondary"><?= esc($voucher['recipient_email']) ?></div><?php endif ?>
                                 <?php endif ?>
                             </td>
                             <td><?= esc(lang((int) $voucher['usage_verified'] === 0 ? 'ExamVouchers.notVerified' : 'ExamVouchers.verified')) ?></td>
                             <td><div class="btn-list"><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-vouchers/show', $voucher['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.voucherDetail'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.voucherDetail'), 'attr') ?>"><i class="ti ti-eye" aria-hidden="true"></i></a>
-                                <?php if ($voucher['recipient_id'] === null): ?><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-vouchers/assign', $voucher['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.assign'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.assign'), 'attr') ?>"><i class="ti ti-user-plus" aria-hidden="true"></i></a><?php endif ?>
+                                <?php if ($voucher['recipient_type'] === null): ?><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-vouchers/assign', $voucher['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.assign'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.assign'), 'attr') ?>"><i class="ti ti-user-plus" aria-hidden="true"></i></a><?php endif ?>
                                 <a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-vouchers/verification', $voucher['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.verification'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.verification'), 'attr') ?>"><i class="ti ti-checklist" aria-hidden="true"></i></a>
                                 <a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-vouchers/note', $voucher['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.voucherNote'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.voucherNote'), 'attr') ?>"><i class="ti ti-notes" aria-hidden="true"></i></a>
                             </div></td>

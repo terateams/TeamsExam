@@ -39,10 +39,20 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
             $this->assertStringNotContainsString('private-voucher-code', $page->response()->getBody());
         }
         $this->assertStringContainsString('No matching internal account', $this->get($path . '?username=missing')->response()->getBody());
-        $result = $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $recipient, 'code' => 'private-voucher-code']);
+        $result = $this->post($path, [
+            csrf_token()      => csrf_hash(),
+            'recipient_type'  => 'internal',
+            'recipient_id'    => (string) $recipient,
+            'recipient_name'  => 'Ignored external name',
+            'recipient_email' => 'ignored@example.com',
+            'code'            => 'private-voucher-code',
+        ]);
         $result->assertRedirect();
         $this->assertSame('success', session('alert.type'));
         $this->assertSame($recipient, (int) $this->recipient($voucher));
+        $stored = db_connect()->table('exam_vouchers')->where('id', $voucher)->get()->getRowArray();
+        $this->assertNull($stored['recipient_name']);
+        $this->assertNull($stored['recipient_email']);
         $list = $this->get('/en/admin/exam-vouchers')->response()->getBody();
         $this->assertStringContainsString('student-one', $list);
         $this->assertStringNotContainsString('private-voucher-code', $list);
@@ -51,6 +61,8 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         $logs = db_connect()->table('operation_audit_logs')->orderBy('id')->get()->getResultArray();
         $this->assertNotEmpty($logs);
         $this->assertStringNotContainsString('private-voucher-code', json_encode($logs));
+        $this->assertStringNotContainsString('Ignored external name', json_encode($logs));
+        $this->assertStringNotContainsString('ignored@example.com', json_encode($logs));
         $log = end($logs);
         $this->assertSame('POST', $log['action']);
         $this->assertSame(ltrim($path, '/'), $log['path']);
@@ -58,18 +70,18 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         $this->assertSame((string) $voucher, $log['target_id']);
         $this->assertSame('exam-voucher.assign', $log['operation']);
         $this->assertSame('exam-voucher', $log['target_type']);
-        $this->assertSame(['recipient_id' => (string) $recipient], json_decode($log['submission'], true)['fields']);
+        $this->assertSame(['recipient_id' => (string) $recipient, 'recipient_type' => 'internal'], json_decode($log['submission'], true)['fields']);
 
         auth()->user()->addPermission('operation-audit.view');
         $page = $this->get('/zh-Hans/admin/audit');
         $page->assertOK();
         $page->assertSee('exam-voucher.assign');
         $page->assertSee('提交内容');
-        $page->assertSee('recipient_id');
+        $page->assertSee('recipient_type');
         $this->assertStringNotContainsString('private-voucher-code', $page->response()->getBody());
 
         $other = $this->user('student-two');
-        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $other])->assertRedirect();
+        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_type' => 'internal', 'recipient_id' => (string) $other])->assertRedirect();
         $this->assertSame('danger', session('alert.type'));
         $this->assertSame($recipient, (int) $this->recipient($voucher));
         $log = db_connect()->table('operation_audit_logs')->orderBy('id', 'DESC')->get()->getRowArray();
@@ -77,11 +89,23 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         $this->assertSame(ltrim($path, '/'), $log['path']);
         $this->assertSame('failed', $log['result']);
         $this->assertSame('exam-voucher.assign', $log['operation']);
-        $this->assertSame(['recipient_id' => (string) $other], json_decode($log['submission'], true)['fields']);
-        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $recipient])->assertRedirect();
+        $this->assertSame(['recipient_id' => (string) $other, 'recipient_type' => 'internal'], json_decode($log['submission'], true)['fields']);
+        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_type' => 'internal', 'recipient_id' => (string) $recipient])->assertRedirect();
         $this->assertSame('danger', session('alert.type'));
         $this->assertSame($recipient, (int) $this->recipient($voucher));
         $this->assertSame('failed', db_connect()->table('operation_audit_logs')->orderBy('id', 'DESC')->get()->getRowArray()['result']);
+        $this->post($path, [
+            csrf_token()      => csrf_hash(),
+            'recipient_type'  => 'external',
+            'recipient_name'  => 'External Student',
+            'recipient_email' => 'external@example.com',
+        ])->assertRedirect();
+        $this->assertSame('danger', session('alert.type'));
+        $stored = db_connect()->table('exam_vouchers')->where('id', $voucher)->get()->getRowArray();
+        $this->assertSame('internal', $stored['recipient_type']);
+        $this->assertSame($recipient, (int) $stored['recipient_id']);
+        $this->assertNull($stored['recipient_name']);
+        $this->assertNull($stored['recipient_email']);
     }
 
     public function testInvalidRecipientMissingVoucherPermissionAndCsrf(): void
@@ -95,7 +119,7 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         $denied = $this->get($path . '?username=deleted-user');
         $denied->assertRedirectTo(config('Auth')->permissionDeniedRedirect());
         $this->assertStringNotContainsString('deleted-user', $denied->response()->getBody() ?? '');
-        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $deleted])->assertRedirectTo(config('Auth')->permissionDeniedRedirect());
+        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_type' => 'internal', 'recipient_id' => (string) $deleted])->assertRedirectTo(config('Auth')->permissionDeniedRedirect());
         $this->assertNull($this->recipient($voucher));
         auth()->user()->addPermission('exam-vouchers.manage');
         $this->assertStringContainsString('No matching internal account', $this->get($path . '?username=deleted-user')->response()->getBody());
@@ -108,7 +132,7 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         }
 
         foreach (['0', '-1', '9999999999', '999999', (string) $deleted, 'private-voucher-code'] as $invalid) {
-            $result = $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => $invalid]);
+            $result = $this->post($path, [csrf_token() => csrf_hash(), 'recipient_type' => 'internal', 'recipient_id' => $invalid]);
             $result->assertRedirect();
             $this->assertSame('danger', session('alert.type'));
             $this->assertStringNotContainsString('private-voucher-code', session('alert.message'));
@@ -117,12 +141,12 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
             $this->assertSame('failed', $log['result']);
             $this->assertSame('exam-voucher.assign', $log['operation']);
             $this->assertSame((string) $voucher, $log['target_id']);
-            $this->assertSame(['recipient_id' => $invalid], json_decode($log['submission'], true)['fields']);
+            $this->assertSame(['recipient_id' => $invalid, 'recipient_type' => 'internal'], json_decode($log['submission'], true)['fields']);
         }
-        $this->post('/en/admin/exam-vouchers/999999/assign', [csrf_token() => csrf_hash(), 'recipient_id' => '1'])->assertStatus(404);
+        $this->post('/en/admin/exam-vouchers/999999/assign', [csrf_token() => csrf_hash(), 'recipient_type' => 'internal', 'recipient_id' => '1'])->assertStatus(404);
 
         try {
-            db_connect()->table('exam_vouchers')->where('id', $voucher)->update(['recipient_id' => 999999]);
+            db_connect()->table('exam_vouchers')->where('id', $voucher)->update(['recipient_id' => 999999, 'recipient_type' => 'internal']);
             $this->fail('The database must reject a nonexistent recipient.');
         } catch (DatabaseException) {
             $this->assertNull($this->recipient($voucher));
@@ -166,11 +190,115 @@ final class ExamVoucherAssignmentTest extends CIUnitTestCase
         $this->assertStringNotContainsString('<option value="' . $first . '"', $literal);
         $this->assertStringContainsString('No matching internal account', $literal);
 
-        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_id' => (string) $second])->assertRedirect();
+        $this->post($path, [csrf_token() => csrf_hash(), 'recipient_type' => 'internal', 'recipient_id' => (string) $second])->assertRedirect();
         $this->assertSame($second, (int) $this->recipient($voucher));
         $assigned = $this->get($path . '?username=student')->response()->getBody();
         $this->assertStringNotContainsString('name="recipient_id"', $assigned);
         $this->assertStringNotContainsString('tom-select.base.min.js', $assigned);
+    }
+
+    public function testExternalRecipientIsStoredDisplayedAndCannotBeReassigned(): void
+    {
+        $voucher = $this->voucher();
+        db_connect()->table('exam_vouchers')->where('id', $voucher)->update([
+            'code_ciphertext' => base64_encode(service('encrypter')->encrypt('display-code')),
+        ]);
+        $this->loginAs('external-recipient-manager', ['exam-vouchers.manage']);
+        $internalRecipient = $this->user('external-mixed-internal');
+        $path              = '/en/admin/exam-vouchers/' . $voucher . '/assign';
+        $page              = $this->get($path)->response()->getBody();
+        $this->assertStringContainsString('name="recipient_name"', $page);
+        $this->assertStringContainsString('name="recipient_email"', $page);
+
+        $result = $this->post($path, [
+            csrf_token()      => csrf_hash(),
+            'recipient_type'  => 'external',
+            'recipient_name'  => '  <b>External Student</b>  ',
+            'recipient_email' => '  external.student@example.com  ',
+            'recipient_id'    => (string) $internalRecipient,
+        ]);
+        $result->assertRedirect();
+        $this->assertSame('success', session('alert.type'));
+        $stored = db_connect()->table('exam_vouchers')->where('id', $voucher)->get()->getRowArray();
+        $this->assertSame('external', $stored['recipient_type']);
+        $this->assertNull($stored['recipient_id']);
+        $this->assertSame('<b>External Student</b>', $stored['recipient_name']);
+        $this->assertSame('external.student@example.com', $stored['recipient_email']);
+        $this->assertSame(['unassigned' => 0, 'assigned' => 1, 'verified' => 0], (new VoucherModel())->inventoryCounts());
+
+        $list = $this->get('/en/admin/exam-vouchers')->response()->getBody();
+        $this->assertStringContainsString('&lt;b&gt;External Student&lt;/b&gt;', $list);
+        $this->assertStringNotContainsString('<b>External Student</b>', $list);
+        $this->assertStringContainsString('external.student@example.com', $list);
+        $detail = $this->get('/en/admin/exam-vouchers/' . $voucher)->response()->getBody();
+        $this->assertStringContainsString('&lt;b&gt;External Student&lt;/b&gt;', $detail);
+        $this->assertStringNotContainsString('<b>External Student</b>', $detail);
+        $this->assertStringContainsString('external.student@example.com', $detail);
+
+        $logs = db_connect()->table('operation_audit_logs')->orderBy('id')->get()->getResultArray();
+        $log  = end($logs);
+        $this->assertSame([
+            'recipient_id'   => (string) $internalRecipient,
+            'recipient_type' => 'external',
+        ], json_decode($log['submission'], true)['fields']);
+        $this->assertStringNotContainsString('External Student', json_encode($logs));
+        $this->assertStringNotContainsString('external.student@example.com', json_encode($logs));
+
+        $this->post($path, [
+            csrf_token()      => csrf_hash(),
+            'recipient_type'  => 'external',
+            'recipient_name'  => 'Another Student',
+            'recipient_email' => 'another@example.com',
+        ])->assertRedirect();
+        $this->assertSame('danger', session('alert.type'));
+        $stored = db_connect()->table('exam_vouchers')->where('id', $voucher)->get()->getRowArray();
+        $this->assertSame('<b>External Student</b>', $stored['recipient_name']);
+        $this->assertSame('external.student@example.com', $stored['recipient_email']);
+
+        $this->post($path, [
+            csrf_token()     => csrf_hash(),
+            'recipient_type' => 'internal',
+            'recipient_id'   => (string) $internalRecipient,
+        ])->assertRedirect();
+        $this->assertSame('danger', session('alert.type'));
+        $stored = db_connect()->table('exam_vouchers')->where('id', $voucher)->get()->getRowArray();
+        $this->assertSame('external', $stored['recipient_type']);
+        $this->assertNull($stored['recipient_id']);
+        $this->assertSame('<b>External Student</b>', $stored['recipient_name']);
+        $this->assertSame('external.student@example.com', $stored['recipient_email']);
+    }
+
+    public function testExternalRecipientRequiresNameAndValidEmail(): void
+    {
+        $voucher = $this->voucher();
+        $this->loginAs('external-validation-manager', ['exam-vouchers.manage']);
+        $path = '/en/admin/exam-vouchers/' . $voucher . '/assign';
+
+        foreach ([
+            ['recipient_type' => 'external', 'recipient_name' => '', 'recipient_email' => 'valid@example.com'],
+            ['recipient_type' => 'external', 'recipient_name' => " \t ", 'recipient_email' => 'valid@example.com'],
+            ['recipient_type' => 'external', 'recipient_name' => 'External Student', 'recipient_email' => 'invalid-email'],
+            ['recipient_type' => 'external', 'recipient_name' => str_repeat('n', 256), 'recipient_email' => 'valid@example.com'],
+            ['recipient_type' => 'external', 'recipient_name' => 'External Student', 'recipient_email' => str_repeat('a', 250) . '@example.com'],
+            ['recipient_type' => 'external', 'recipient_name' => 'External Student'],
+            ['recipient_type' => 'external', 'recipient_email' => 'valid@example.com'],
+            ['recipient_type' => 'invalid', 'recipient_name' => 'External Student', 'recipient_email' => 'valid@example.com'],
+            ['recipient_name' => 'External Student', 'recipient_email' => 'valid@example.com'],
+        ] as $invalid) {
+            $this->post($path, [csrf_token() => csrf_hash(), ...$invalid])->assertRedirect();
+            $this->assertSame('danger', session('alert.type'));
+            $stored = db_connect()->table('exam_vouchers')->where('id', $voucher)->get()->getRowArray();
+            $this->assertNull($stored['recipient_type']);
+            $this->assertNull($stored['recipient_name']);
+            $this->assertNull($stored['recipient_email']);
+            $this->assertNull($stored['recipient_id']);
+            $log = db_connect()->table('operation_audit_logs')->orderBy('id', 'DESC')->get()->getRowArray();
+            $this->assertSame('failed', $log['result']);
+            $fields = json_decode($log['submission'], true)['fields'];
+            $this->assertSame(array_intersect_key($invalid, ['recipient_type' => true]), $fields);
+            $this->assertStringNotContainsString('External Student', json_encode($log));
+            $this->assertStringNotContainsString('valid@example.com', json_encode($log));
+        }
     }
 
     public function testSearchLimitsResultsAndPromptsToRefine(): void

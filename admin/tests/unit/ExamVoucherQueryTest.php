@@ -42,7 +42,9 @@ final class ExamVoucherQueryTest extends CIUnitTestCase
         $both       = $this->voucher('STOCK-THREE', 'Issuer', 'stock-three', 'Exam', 'Region');
         $db         = db_connect();
         $db->table('exam_vouchers')->where('id', $unassigned)->update(['verification_note' => 'Manual check']);
-        $db->table('exam_vouchers')->whereIn('id', [$assigned, $both])->update(['recipient_id' => auth()->id()]);
+        $db->table('exam_vouchers')->whereIn('id', [$assigned, $both])->update([
+            'recipient_id' => auth()->id(), 'recipient_type' => 'internal',
+        ]);
         $db->table('exam_vouchers')->where('id', $both)->update(['verification_note' => 'Manual check']);
 
         $this->assertInventory($this->get('/en/admin/exam-vouchers')->response()->getBody(), 1, 2, 2);
@@ -137,7 +139,9 @@ final class ExamVoucherQueryTest extends CIUnitTestCase
         $recipient->setPassword('A-local-password-123!');
         $users = auth()->getProvider();
         $users->save($recipient);
-        db_connect()->table('exam_vouchers')->where('id', $assigned)->update(['recipient_id' => $users->getInsertID()]);
+        db_connect()->table('exam_vouchers')->where('id', $assigned)->update([
+            'recipient_id' => $users->getInsertID(), 'recipient_type' => 'internal',
+        ]);
 
         foreach ([
             'en'      => ['Recipient', 'Assigned', 'Unassigned'],

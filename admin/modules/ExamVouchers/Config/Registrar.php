@@ -40,7 +40,7 @@ class Registrar
                 'controller' => 'Modules\\ExamVouchers\\Controllers\\VoucherAssignments::assign',
                 'methods'    => ['POST'], 'action' => 'exam-voucher.assign',
                 'object'     => ['type' => 'exam-voucher', 'route_parameter' => 0],
-                'fields'     => ['recipient_id'],
+                'fields'     => ['recipient_type', 'recipient_id'],
             ],
         ]];
     }

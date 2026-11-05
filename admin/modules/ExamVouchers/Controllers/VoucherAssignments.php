@@ -22,7 +22,7 @@ class VoucherAssignments extends ResourcePresenter
     public function form($id): ResponseInterface|string
     {
         $this->response->setHeader('Cache-Control', 'private, no-store');
-        $voucher = (new VoucherModel())->select('id, recipient_id')->find((int) $id);
+        $voucher = (new VoucherModel())->select('id, recipient_type')->find((int) $id);
         if ($voucher === null) {
             return $this->response->setStatusCode(404);
         }
@@ -31,7 +31,7 @@ class VoucherAssignments extends ResourcePresenter
         $search    = is_string($search) ? trim($search) : '';
         $users     = [];
         $moreUsers = false;
-        if ($voucher['recipient_id'] === null && $search !== '' && mb_strlen($search) <= 30) {
+        if ($voucher['recipient_type'] === null && $search !== '' && mb_strlen($search) <= 30) {
             $escape = db_connect()->likeEscapeChar;
             $match  = strtr($search, [$escape => $escape . $escape, '%' => $escape . '%', '_' => $escape . '_']);
             $users  = auth()->getProvider()->select('id, username, avatar')
@@ -53,9 +53,31 @@ class VoucherAssignments extends ResourcePresenter
             return $this->response->setStatusCode(404);
         }
         $validation = service('validation');
-        $validation->setRules(['recipient_id' => 'required|is_natural_no_zero|max_length[10]|less_than_equal_to[2147483647]']);
-        $valid   = $validation->run($this->request->getPost());
-        $success = $valid && $model->assignRecipient((int) $id, (int) $validation->getValidated()['recipient_id']);
+        $post       = $this->request->getPost() ?? [];
+
+        foreach (['recipient_name', 'recipient_email'] as $field) {
+            if (isset($post[$field]) && is_string($post[$field])) {
+                $post[$field] = trim($post[$field]);
+            }
+        }
+
+        $rules = ['recipient_type' => 'required|in_list[internal,external]'];
+        if (($post['recipient_type'] ?? null) === 'internal') {
+            $rules['recipient_id'] = 'required|is_natural_no_zero|max_length[10]|less_than_equal_to[2147483647]';
+        } elseif (($post['recipient_type'] ?? null) === 'external') {
+            $rules['recipient_name']  = 'required|max_length[255]';
+            $rules['recipient_email'] = 'required|valid_email|max_length[254]';
+        }
+        $validation->setRules($rules);
+        $valid = $validation->run($post);
+        if ($valid) {
+            $recipient = $validation->getValidated();
+            $success   = $recipient['recipient_type'] === 'internal'
+                ? $model->assignRecipient((int) $id, (int) $recipient['recipient_id'])
+                : $model->assignExternalRecipient((int) $id, $recipient['recipient_name'], $recipient['recipient_email']);
+        } else {
+            $success = false;
+        }
 
         return redirect()->to(route_to('admin/exam-vouchers/assign', $id))
             ->with('alert', ['type' => $success ? 'success' : 'danger', 'message' => lang($success ? 'ExamVouchers.assigned' : 'ExamVouchers.assignFailed')]);

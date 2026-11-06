@@ -35,7 +35,7 @@ use Geminus\Admin\Config\AdminMenu;
             <?php endif; ?>
         <?php endif; ?>
     <?php endforeach; ?>
-    <?php if (auth()->user()?->can('users.view') || auth()->user()?->can('users.create') || auth()->user()?->can('operation-audit.view') || auth()->user()?->can('email-deliveries.view') || auth()->user()?->can('email-templates.manage') || auth()->user()?->can('email-settings.manage') || auth()->user()?->can('microsoft-settings.manage') || auth()->user()?->inGroup('superadmin')): ?>
+    <?php if (auth()->user()?->can('users.view') || auth()->user()?->can('users.create') || auth()->user()?->can('operation-audit.view') || auth()->user()?->can('queue-jobs.view') || auth()->user()?->can('email-deliveries.view') || auth()->user()?->can('email-templates.manage') || auth()->user()?->can('email-settings.manage') || auth()->user()?->can('microsoft-settings.manage') || auth()->user()?->inGroup('superadmin')): ?>
         <li class="nav-item">
             <hr class="my-2 mx-3">
         </li>
@@ -53,6 +53,14 @@ use Geminus\Admin\Config\AdminMenu;
             <a class="nav-link<?= url_is('*/admin/audit') ? ' active' : '' ?>" href="<?= route_to('admin/audit') ?>"<?= url_is('*/admin/audit') ? ' aria-current="page"' : '' ?>>
                 <i class="ti ti-history nav-link-icon icon" aria-hidden="true"></i>
                 <span class="nav-link-title"><?= esc(lang('Admin.operationAudit')) ?></span>
+            </a>
+        </li>
+    <?php endif; ?>
+    <?php if (auth()->user()?->can('queue-jobs.view')): ?>
+        <li class="nav-item<?= url_is('*/admin/queue-jobs') ? ' active' : '' ?>">
+            <a class="nav-link<?= url_is('*/admin/queue-jobs') ? ' active' : '' ?>" href="<?= route_to('admin/queue-jobs') ?>"<?= url_is('*/admin/queue-jobs') ? ' aria-current="page"' : '' ?>>
+                <i class="ti ti-list-check nav-link-icon icon" aria-hidden="true"></i>
+                <span class="nav-link-title"><?= esc(lang('Admin.queueJobs')) ?></span>
             </a>
         </li>
     <?php endif; ?>

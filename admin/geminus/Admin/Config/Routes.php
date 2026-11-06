@@ -33,6 +33,7 @@ $routes->group('{locale}/admin', ['namespace' => 'Geminus\Admin\Controllers'], s
         $routes->post('test', 'EmailSettings::sendTest', ['as' => 'admin/settings/email/test']);
     });
     $routes->get('audit', 'OperationAudit::index', ['as' => 'admin/audit', 'filter' => 'permission:operation-audit.view']);
+    $routes->get('queue-jobs', 'QueueJobs::index', ['as' => 'admin/queue-jobs', 'filter' => 'permission:queue-jobs.view']);
     $routes->get('mail/deliveries', 'EmailQueue::index', ['as' => 'admin/mail/deliveries', 'filter' => 'permission:email-deliveries.view']);
     $routes->group('mail', ['filter' => 'permission:email-templates.manage'], static function ($routes) {
         $routes->get('templates', 'EmailTemplates::index', ['as' => 'admin/mail/templates']);

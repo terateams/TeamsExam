@@ -5,12 +5,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-    <div class="nav nav-tabs mb-3" role="tablist" aria-label="<?= esc($page_title, 'attr') ?>">
-        <a class="nav-link<?= $view === 'logs' ? ' active' : '' ?>" href="<?= route_to('admin/mail/deliveries') ?>"<?= $view === 'logs' ? ' aria-current="page"' : '' ?>><?= esc(lang('Admin.mailAudit')) ?></a>
-        <a class="nav-link<?= $view === 'queue' ? ' active' : '' ?>" href="<?= route_to('admin/mail/deliveries') ?>?view=queue"<?= $view === 'queue' ? ' aria-current="page"' : '' ?>><?= esc(lang('Admin.mailQueueJobs')) ?></a>
-    </div>
     <div class="card">
-        <?php if ($view === 'logs'): ?>
             <div class="card-body">
                 <?= view_cell('Geminus\Admin\Cells\FilterBarCell', [
                     'action'      => route_to('admin/mail/deliveries'), 'clearUrl' => route_to('admin/mail/deliveries'),
@@ -21,10 +16,8 @@
                     ],
                 ]) ?>
             </div>
-        <?php endif; ?>
         <div class="table-responsive">
             <table class="table card-table table-vcenter">
-                <?php if ($view === 'logs'): ?>
                     <thead><tr><th scope="col">#</th><th scope="col"><?= esc(lang('Admin.mailRecipient')) ?></th><th scope="col"><?= esc(lang('Admin.mailSubject')) ?></th><th scope="col"><?= esc(lang('Admin.mailStatus')) ?></th><th scope="col"><?= esc(lang('Admin.mailAttempts')) ?></th><th scope="col"><?= esc(lang('Admin.mailCreated')) ?></th><th scope="col"><?= esc(lang('Admin.mailProcessed')) ?></th><th scope="col"><?= esc(lang('Admin.mailFailureReason')) ?></th></tr></thead>
                     <tbody>
                         <?php foreach ($rows as $row): ?>
@@ -45,27 +38,6 @@
                             <?= view_cell('Geminus\Admin\Cells\EmptyStateCell', ['message' => lang('Admin.mailNoRecords'), 'filtered' => $status !== '' || $recipient !== '', 'clearUrl' => route_to('admin/mail/deliveries'), 'clearLabel' => lang('Admin.userClear')]) ?>
                         </td></tr><?php endif; ?>
                     </tbody>
-                <?php else: ?>
-                    <thead><tr><th scope="col">#</th><th scope="col"><?= esc(lang('Admin.mailRecipient')) ?></th><th scope="col"><?= esc(lang('Admin.mailSubject')) ?></th><th scope="col"><?= esc(lang('Admin.mailStatus')) ?></th><th scope="col"><?= esc(lang('Admin.mailAttempts')) ?></th><th scope="col"><?= esc(lang('Admin.mailCreated')) ?></th><th scope="col"><?= esc(lang('Admin.mailAvailable')) ?></th></tr></thead>
-                    <tbody>
-                        <?php foreach ($rows as $row): ?>
-                            <tr>
-                                <td><?= esc($row['id']) ?></td>
-                                <td class="text-wrap"><?= esc($row['recipient'] ?? '-') ?></td>
-                                <td class="text-wrap"><?= esc($row['subject'] ?? '-') ?></td>
-                                <td><span class="badge <?= (int) $row['status'] === 1 ? 'bg-warning-lt' : 'bg-secondary-lt' ?>"><?= esc(lang('Admin.mailJob_' . match ((int) $row['status']) {
-                                    0 => 'pending', 1 => 'reserved', default => 'unknown',
-                                })) ?></span></td>
-                                <td><?= esc($row['attempts']) ?></td>
-                                <td class="text-nowrap"><?= esc($me->formatDateTime($row['created_at'])) ?></td>
-                                <td class="text-nowrap"><?= esc($me->formatDateTime($row['available_at'])) ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        <?php if ($rows === []): ?><tr><td colspan="7" class="text-center py-4">
-                            <?= view_cell('Geminus\Admin\Cells\EmptyStateCell', ['message' => lang('Admin.mailNoRecords')]) ?>
-                        </td></tr><?php endif; ?>
-                    </tbody>
-                <?php endif; ?>
             </table>
         </div>
         <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">

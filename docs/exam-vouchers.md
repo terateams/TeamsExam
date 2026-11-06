@@ -45,12 +45,13 @@ flowchart LR
 
 ### 实体关系
 
-下图展示模块核心表和接收人关联；`users` 是后台现有用户表。密钥守卫独立于业务记录，没有指向考试券的外键。
+下图展示模块核心表、接收人和邮件投递记录的关系；`users` 是后台现有用户表。密钥守卫独立于业务记录，没有指向考试券的外键。
 
 ```mermaid
 erDiagram
     exam_voucher_batches ||--o{ exam_vouchers : contains
     users o|--o{ exam_vouchers : receives_internal
+    exam_vouchers ||--o{ exam_voucher_email_deliveries : has_deliveries
 
     exam_voucher_batches {
         int id PK
@@ -82,6 +83,20 @@ erDiagram
     exam_voucher_key_guard {
         int id PK
         char key_fingerprint
+    }
+    exam_voucher_email_deliveries {
+        int id PK
+        int voucher_id FK
+        char batch_key
+        varchar recipient
+        text subject
+        text snapshot_ciphertext
+        varchar status
+        int attempts
+        int job_id
+        datetime created_at
+        datetime processed_at
+        varchar failure_reason
     }
 ```
 

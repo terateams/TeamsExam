@@ -135,3 +135,11 @@ database.tests.port = 5432
 ```sh
 docker compose -f docker/docker-compose.yaml exec -T teamsexam-admin vendor/bin/phpunit --testsuite App --no-coverage
 ```
+
+### Pull Request CI
+
+[GitHub Actions 工作流](.github/workflows/ci.yml) 仅在面向 `teams-exam` 分支的 Pull Request 创建、重新打开或更新时运行，包括 Dependabot 的依赖更新；直接 push 不触发 CI，本地开发仍按上述方式运行测试，无需创建 PR。
+
+工作流使用 PHP 8.4 和临时 PostgreSQL 16 测试数据库，先校验 Composer 配置，再按 `admin/composer.lock` 安装开发依赖，为本次测试随机生成临时加密密钥并运行完整的 `App` 测试套件。不使用本地 `.env`、业务数据库或仓库 Secrets，也不自动合并 PR。
+
+GitHub 仓库需在 **Settings → Actions → General** 中允许 GitHub Actions 及工作流引用的 Actions；Fork 仓库可能需要先在 **Actions** 页面启用工作流。无需为此启用“必须通过 PR 合并”的分支规则。

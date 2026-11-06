@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [teams-exam]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: admin
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: teamsexam_test
+          POSTGRES_USER: teamsexam
+          POSTGRES_PASSWORD: testing
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U teamsexam -d teamsexam_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.4'
+          extensions: intl, mbstring, dom, xml, xmlwriter, pgsql, zip
+          tools: composer:v2
+          coverage: none
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install locked dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run tests
+        run: |
+          test_key="$(php -r 'echo bin2hex(random_bytes(32));')"
+          env \
+            'CI_ENVIRONMENT=testing' \
+            "encryption.key=$test_key" \
+            'database.tests.hostname=127.0.0.1' \
+            'database.tests.database=teamsexam_test' \
+            'database.tests.username=teamsexam' \
+            'database.tests.password=testing' \
+            'database.tests.DBDriver=Postgre' \
+            'database.tests.DBPrefix=' \
+            'database.tests.charset=utf8' \
+            'database.tests.port=5432' \
+            vendor/bin/phpunit --testsuite App --no-coverage

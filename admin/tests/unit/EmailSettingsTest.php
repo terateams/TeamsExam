@@ -414,11 +414,7 @@ final class EmailSettingsTest extends CIUnitTestCase
         $this->assertStringContainsString('name="recipient" value="TARGET" maxlength="254"', $logs->response()->getBody());
 
         $queue = $this->get('/en/admin/mail/deliveries?view=queue');
-        $queue->assertOK();
-        $queue->assertSee('target@example.com');
-        $this->assertStringNotContainsString('Private body', $queue->response()->getBody());
-        $this->assertStringNotContainsString('smtp-secret', $queue->response()->getBody());
-        $this->assertStringContainsString('Total: 1 (1 - 1)', $queue->response()->getBody());
+        $queue->assertRedirectTo('/en/admin/queue-jobs');
         $this->get('/zh-Hans/admin/mail/deliveries')->assertSee('发送记录');
     }
 
@@ -446,7 +442,7 @@ final class EmailSettingsTest extends CIUnitTestCase
         $this->assertStringContainsString('<td class="text-nowrap">2026-01-01 08:00:00</td>', $logs->response()->getBody());
         $this->assertStringContainsString('<td class="text-nowrap">2026-01-01 09:15:00</td>', $logs->response()->getBody());
 
-        $queue = $this->get('/en/admin/mail/deliveries?view=queue');
+        $queue = $this->get('/en/admin/queue-jobs');
         $queue->assertOK();
         $this->assertStringContainsString('<td class="text-nowrap">2026-01-01 08:00:00</td>', $queue->response()->getBody());
         $this->assertStringContainsString('<td class="text-nowrap">2026-01-01 09:15:00</td>', $queue->response()->getBody());
@@ -505,7 +501,7 @@ final class EmailSettingsTest extends CIUnitTestCase
             $xpath = new DOMXPath($document);
             $this->assertSame(1, $xpath->query('//div[@class="empty-action"]/a[@href="/' . $locale . '/admin/mail/deliveries"]')->length);
 
-            $queue = $this->get('/' . $locale . '/admin/mail/deliveries?view=queue');
+            $queue = $this->get('/' . $locale . '/admin/queue-jobs');
             $queue->assertOK();
             TableLayoutAssertions::assertTablesInCards($queue->response()->getBody(), paginated: true);
             $queue->assertSee(lang('Admin.mailNoRecords'), 'h3');

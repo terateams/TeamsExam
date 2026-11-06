@@ -185,6 +185,7 @@ final class RoleSettingsTest extends CIUnitTestCase
             ['users.view', '/en/admin/users'],
             ['email-settings.manage', '/en/admin/settings/email'],
             ['email-deliveries.view', '/en/admin/mail/deliveries'],
+            ['queue-jobs.view', '/en/admin/queue-jobs'],
             ['email-templates.manage', '/en/admin/mail/templates'],
             ['operation-audit.view', '/en/admin/audit'],
             ['microsoft-settings.manage', '/en/admin/settings/microsoft'],

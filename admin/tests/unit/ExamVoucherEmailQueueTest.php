@@ -23,6 +23,7 @@ use Modules\ExamVouchers\Libraries\VoucherMailTemplate;
 use Modules\ExamVouchers\Models\BatchModel;
 use Modules\ExamVouchers\Models\VoucherEmailDeliveryModel;
 use Modules\ExamVouchers\Models\VoucherModel;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @internal
@@ -230,6 +231,122 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
         $this->assertSame('', $stored['snapshot_ciphertext']);
     }
 
+    #[DataProvider('provideTransportFailureUsesBaseClassification')]
+    public function testTransportFailureUsesBaseClassification(bool $throws, string $rawError, string $expected): void
+    {
+        $voucher = $this->voucher('private-code', true);
+        Services::injectMock('encrypter', $this->encrypter());
+        $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => 'Private body: {code}'], str_repeat('a', 32));
+        $delivery = $this->db->table('exam_voucher_email_deliveries')->get()->getRowArray();
+        $email    = $this->getStubBuilder(QueuedEmail::class)->setConstructorArgs([new EmailDeliveryLogModel(), service('queue')])->onlyMethods(['sendDirect', 'printDebugger'])->getStub();
+        if ($throws) {
+            $email->method('sendDirect')->willThrowException(new RuntimeException($rawError));
+        } else {
+            $email->method('sendDirect')->willReturn(false);
+            $email->method('printDebugger')->willReturn($rawError . '<pre>Private body: private-code</pre>');
+        }
+        Services::injectMock('email', $email);
+
+        try {
+            (new SendVoucherEmail(['delivery_id' => $delivery['id']]))->process();
+            $this->fail('A failed transport must be retried.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Voucher email delivery failed.', $exception->getMessage());
+            $this->assertNull($exception->getPrevious());
+        }
+        $stored = $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->get()->getRowArray();
+        $this->assertSame($expected, $stored['failure_reason']);
+        $this->assertSame('queued', $stored['status']);
+        $this->assertSame(1, (int) $stored['attempts']);
+        $this->assertNotNull($stored['processed_at']);
+        $this->assertSame($delivery['snapshot_ciphertext'], $stored['snapshot_ciphertext']);
+        $this->assertSame(0, $this->db->table('email_delivery_logs')->countAllResults());
+
+        $this->loginAs(['email-deliveries.view']);
+        $page = $this->get('/en/admin/mail/voucher-deliveries');
+        $page->assertOK();
+        $this->assertStringContainsString($expected, $page->response()->getBody());
+
+        foreach (['private-code', 'private-token', 'Private body:'] as $secret) {
+            $this->assertStringNotContainsString($secret, json_encode($stored));
+            $this->assertStringNotContainsString($secret, $page->response()->getBody());
+        }
+    }
+
+    public static function provideTransportFailureUsesBaseClassification(): iterable
+    {
+        return [
+            'SMTP rejection' => [false, 'The following SMTP error was encountered: 550 private-code private-token', 'SMTP server rejected message (code 550).'],
+            'authentication' => [false, 'Authentication failed: private-code private-token', 'Email transport authentication failed.'],
+            'timeout'        => [true, 'Connection timed out: private-code private-token', 'Email transport connection failed or timed out.'],
+            'TLS'            => [true, 'TLS certificate rejected: private-code private-token', 'Email transport TLS negotiation failed.'],
+            'unknown error'  => [true, 'private-code private-token', 'Email delivery failed.'],
+        ];
+    }
+
+    public function testSuccessfulRetryClearsFailureReasonAndSnapshot(): void
+    {
+        $voucher = $this->voucher('retry-secret', true);
+        Services::injectMock('encrypter', $this->encrypter());
+        $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => '{code}'], str_repeat('a', 32));
+        $delivery = $this->db->table('exam_voucher_email_deliveries')->get()->getRowArray();
+        $email    = $this->getStubBuilder(QueuedEmail::class)->setConstructorArgs([new EmailDeliveryLogModel(), service('queue')])->onlyMethods(['sendDirect', 'printDebugger'])->getStub();
+        $email->method('sendDirect')->willReturnOnConsecutiveCalls(false, true);
+        $email->method('printDebugger')->willReturn('Connection refused');
+        Services::injectMock('email', $email);
+        $job = new SendVoucherEmail(['delivery_id' => $delivery['id']]);
+
+        try {
+            $job->process();
+            $this->fail('The first attempt must fail.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Voucher email delivery failed.', $exception->getMessage());
+        }
+        $failed = $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->get()->getRowArray();
+        $this->assertSame('Email transport connection refused.', $failed['failure_reason']);
+        $job->process();
+        $stored = $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->get()->getRowArray();
+        $this->assertSame('sent', $stored['status']);
+        $this->assertSame(2, (int) $stored['attempts']);
+        $this->assertNull($stored['failure_reason']);
+        $this->assertSame('', $stored['snapshot_ciphertext']);
+    }
+
+    public function testSnapshotFailuresAreNotClassifiedAsTransportErrors(): void
+    {
+        $voucher   = $this->voucher('snapshot-private-code', true);
+        $encrypter = $this->encrypter();
+        Services::injectMock('encrypter', $encrypter);
+        $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => '{code}'], str_repeat('a', 32));
+        $delivery = $this->db->table('exam_voucher_email_deliveries')->get()->getRowArray();
+        $email    = $this->getMockBuilder(QueuedEmail::class)->setConstructorArgs([new EmailDeliveryLogModel(), service('queue')])->onlyMethods(['sendDirect'])->getMock();
+        $email->expects($this->never())->method('sendDirect');
+        Services::injectMock('email', $email);
+        $attempt = 0;
+
+        foreach ([
+            'invalid base64!',
+            base64_encode('not encrypted'),
+            base64_encode($encrypter->encrypt('TLS snapshot-private-code')),
+            base64_encode($encrypter->encrypt('{"body":123}')),
+        ] as $ciphertext) {
+            $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->update(['snapshot_ciphertext' => $ciphertext]);
+
+            try {
+                (new SendVoucherEmail(['delivery_id' => $delivery['id']]))->process();
+                $this->fail('Invalid snapshots must fail before sending.');
+            } catch (RuntimeException $exception) {
+                $this->assertSame('Voucher email delivery failed.', $exception->getMessage());
+                $this->assertNull($exception->getPrevious());
+            }
+            $stored = $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->get()->getRowArray();
+            $this->assertSame('Email snapshot could not be decoded.', $stored['failure_reason']);
+            $this->assertSame(++$attempt, (int) $stored['attempts']);
+            $this->assertSame('queued', $stored['status']);
+            $this->assertSame($ciphertext, $stored['snapshot_ciphertext']);
+        }
+    }
+
     public function testMailPermissionsAndCsrf(): void
     {
         $voucher = $this->voucher('private-code', true);
@@ -418,7 +535,7 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
         Services::injectMock('encrypter', $this->encrypter());
         $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => '{code}'], str_repeat('a', 32));
         $email = $this->getMockBuilder(QueuedEmail::class)->setConstructorArgs([new EmailDeliveryLogModel(), service('queue')])->onlyMethods(['sendDirect'])->getMock();
-        $email->expects($this->exactly(3))->method('sendDirect')->willThrowException(new RuntimeException('worker-private-code'));
+        $email->expects($this->exactly(3))->method('sendDirect')->willThrowException(new RuntimeException('Authentication failed: worker-private-code'));
         Services::injectMock('email', $email);
         $worker = new QueueWork(service('logger'), service('commands'));
         ob_start();
@@ -426,16 +543,18 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
         try {
             $worker->run(['exam-voucher-email', 'stop-when-empty' => true, 'retry-after' => 0]);
         } finally {
-            ob_end_clean();
+            $output = ob_get_clean();
         }
         $delivery = $this->db->table('exam_voucher_email_deliveries')->get()->getRowArray();
         $failed   = $this->db->table('queue_jobs_failed')->where('queue', 'exam-voucher-email')->get()->getRowArray();
         $this->assertSame('failed', $delivery['status']);
         $this->assertSame(3, (int) $delivery['attempts']);
+        $this->assertSame('Email transport authentication failed.', $delivery['failure_reason']);
         $this->assertSame('', $delivery['snapshot_ciphertext']);
         $this->assertNotNull($failed);
         $this->assertSame(['delivery_id' => (int) $delivery['id']], json_decode($failed['payload'], true)['data']);
         $this->assertStringNotContainsString('worker-private-code', json_encode($failed));
+        $this->assertStringNotContainsString('worker-private-code', $output);
     }
 
     public function testFailureRemainsActiveUntilFinalFailureEvent(): void
@@ -444,9 +563,17 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
         Services::injectMock('encrypter', $this->encrypter());
         $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => '{code}'], str_repeat('a', 32));
         $delivery = $this->db->table('exam_voucher_email_deliveries')->get()->getRowArray();
-        $email    = $this->getMockBuilder(QueuedEmail::class)->setConstructorArgs([new EmailDeliveryLogModel(), service('queue')])->onlyMethods(['sendDirect'])->getMock();
-        $email->expects($this->exactly(3))->method('sendDirect')->willThrowException(new RuntimeException('failure-secret'));
+        $email    = $this->getStubBuilder(QueuedEmail::class)->setConstructorArgs([new EmailDeliveryLogModel(), service('queue')])->onlyMethods(['sendDirect'])->getStub();
+        $errors   = ['Connection timed out: failure-secret', 'TLS failure: failure-secret', 'Authentication failed: failure-secret'];
+        $email->method('sendDirect')->willReturnCallback(static function () use (&$errors): never {
+            throw new RuntimeException(array_shift($errors));
+        });
         Services::injectMock('email', $email);
+        $reasons = [
+            1 => 'Email transport connection failed or timed out.',
+            2 => 'Email transport TLS negotiation failed.',
+            3 => 'Email transport authentication failed.',
+        ];
 
         for ($attempt = 1; $attempt <= 3; $attempt++) {
             try {
@@ -458,6 +585,7 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
             $stored = $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->get()->getRowArray();
             $this->assertSame('queued', $stored['status']);
             $this->assertSame($attempt, (int) $stored['attempts']);
+            $this->assertSame($reasons[$attempt], $stored['failure_reason']);
             $this->assertStringNotContainsString('failure-secret', json_encode($stored));
         }
         $jobRow = $this->db->table('queue_jobs')->where('id', $delivery['job_id'])->get()->getRowArray();
@@ -468,7 +596,25 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
         $stored = $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->get()->getRowArray();
         $this->assertSame('failed', $stored['status']);
         $this->assertSame('', $stored['snapshot_ciphertext']);
+        $this->assertSame('Email transport authentication failed.', $stored['failure_reason']);
+    }
+
+    public function testFinalFailureWithoutAttemptReasonUsesSafeFallback(): void
+    {
+        $voucher = $this->voucher('unprocessed-private-code', true);
+        $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => '{code}'], str_repeat('a', 32));
+        $delivery = $this->db->table('exam_voucher_email_deliveries')->get()->getRowArray();
+        $this->assertNull($delivery['failure_reason']);
+        $this->assertNotSame('', $delivery['snapshot_ciphertext']);
+
+        $this->assertTrue((new VoucherEmailDeliveryModel())->markFailed((int) $delivery['job_id']));
+
+        $stored = $this->db->table('exam_voucher_email_deliveries')->where('id', $delivery['id'])->get()->getRowArray();
+        $this->assertSame('failed', $stored['status']);
         $this->assertSame('Email delivery failed.', $stored['failure_reason']);
+        $this->assertSame('', $stored['snapshot_ciphertext']);
+        $this->assertNotNull($stored['processed_at']);
+        $this->assertSame(0, (int) $stored['attempts']);
     }
 
     private function emailQueue(?QueueInterface $queue = null): VoucherEmailQueue

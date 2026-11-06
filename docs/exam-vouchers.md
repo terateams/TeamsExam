@@ -113,6 +113,8 @@ erDiagram
 
 每张券的正文快照加密保存，队列载荷只包含投递记录编号；投递完成或最终失败后清除快照。邮件失败记录和应用日志不记录正文、券码或传输服务返回的原始错误。邮件接收人的邮箱仍会保留明文券码，应按兑换凭证管理。发送成功表示邮件服务已接受，不保证进入收件箱；若服务接受邮件后进程在记录成功前中断，自动重试可能导致重复投递。
 
+发送失败复用底座 `QueuedEmail::auditFailureReason()`，仅保存 SMTP 拒绝、认证失败、连接或 TLS 故障等安全分类摘要；快照解密或解析失败单独记录为 `Email snapshot could not be decoded.`。最终失败保留最后一次分类原因，重试成功后清除原因；不改写既有失败记录，也不将考试券投递写入系统邮件记录表。
+
 ### 到期提醒
 
 考试券模块通过 [`Config/Registrar.php`](../admin/modules/ExamVouchers/Config/Registrar.php) 的 `Tasks()` 声明任务，由底座统一聚合，在应用时区每天午夜调度 `exam-voucher-expiry`，同时保留现有 `send-email` 任务。无需模块或应用级 `Config/Tasks.php`，也不依赖模块自动加载顺序。接入约定见[模块开发与底座扩展](module-development.md)。提供的配置默认为 UTC；无论应用使用哪个时区，该命令始终按 UTC 日期计算。

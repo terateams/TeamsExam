@@ -72,10 +72,10 @@ class VoucherEmailDeliveryModel extends Model
         return $this->db->table($this->table)->where('id', $id)->update(['job_id' => $jobId]);
     }
 
-    public function recordAttempt(int $id, int $attempts, bool $sent): bool
+    public function recordAttempt(int $id, int $attempts, ?string $failureReason): bool
     {
-        $data = ['attempts' => $attempts, 'processed_at' => gmdate('Y-m-d H:i:s'), 'failure_reason' => $sent ? null : 'Email delivery failed.'];
-        if ($sent) {
+        $data = ['attempts' => $attempts, 'processed_at' => gmdate('Y-m-d H:i:s'), 'failure_reason' => $failureReason];
+        if ($failureReason === null) {
             $data += ['status' => self::SENT, 'snapshot_ciphertext' => ''];
         }
 
@@ -84,9 +84,10 @@ class VoucherEmailDeliveryModel extends Model
 
     public function markFailed(int $jobId): bool
     {
-        return $this->db->table($this->table)->where('job_id', $jobId)->where('status', self::QUEUED)->update([
-            'status'       => self::FAILED, 'failure_reason' => 'Email delivery failed.',
-            'processed_at' => gmdate('Y-m-d H:i:s'), 'snapshot_ciphertext' => '',
-        ]);
+        return $this->db->table($this->table)->where('job_id', $jobId)->where('status', self::QUEUED)
+            ->set('failure_reason', "COALESCE(failure_reason, 'Email delivery failed.')", false)->update([
+                'status'       => self::FAILED,
+                'processed_at' => gmdate('Y-m-d H:i:s'), 'snapshot_ciphertext' => '',
+            ]);
     }
 }

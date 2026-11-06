@@ -1490,7 +1490,7 @@ final class AnnouncementsTest extends CIUnitTestCase
         @$document->loadHTML($dashboard->response()->getBody());
         $xpath = new DOMXPath($document);
         $this->assertSame(1, $xpath->query('//div[@id="sidebar-menu"]/ul/li/hr')->length);
-        $this->assertSame('/en/admin/announcements', $xpath->query('//div[@id="sidebar-menu"]/ul/li[hr]/preceding-sibling::li[1]/a')->item(0)->getAttribute('href'));
+        $this->assertSame(1, $xpath->query("//div[@id='sidebar-menu']/ul/li[a[@href='/en/admin/announcements']]/following-sibling::li[hr]")->length);
         $this->assertSame('/en/admin/users', $xpath->query('//div[@id="sidebar-menu"]/ul/li[hr]/following-sibling::li[1]/a')->item(0)->getAttribute('href'));
         $this->get('/en/admin/settings/roles?role=superadmin')->assertSee('announcements.*');
     }

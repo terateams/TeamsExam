@@ -212,6 +212,7 @@ final class UsersTest extends CIUnitTestCase
     {
         service('settings')->forget(MailTemplates::settingKey('invitation', 'en', 'subject'));
         service('settings')->forget(MailTemplates::settingKey('invitation', 'en', 'body'));
+        Services::resetSingle('mailtemplates');
         Services::resetSingle('email');
         Services::resetSingle('queue');
         auth()->logout();

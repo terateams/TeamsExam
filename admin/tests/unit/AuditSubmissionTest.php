@@ -175,13 +175,18 @@ final class AuditSubmissionTest extends CIUnitTestCase
         }
     }
 
-    public function testAuditConfigPreservesAdminAndAnnouncementOperations(): void
+    public function testAuditConfigPreservesOperationsFromAllRegistrars(): void
     {
         $config = new OperationAudit();
 
-        $this->assertCount(16, $config->operations);
+        $registrations = [
+            Registrar::OperationAudit(),
+            Modules\Announcements\Config\Registrar::OperationAudit(),
+            Modules\ExamVouchers\Config\Registrar::OperationAudit(),
+        ];
+        $this->assertCount(20, $config->operations);
 
-        foreach ([Registrar::OperationAudit(), Modules\Announcements\Config\Registrar::OperationAudit()] as $registration) {
+        foreach ($registrations as $registration) {
             foreach ($registration['operations'] as $definition) {
                 $this->assertContains($definition, $config->operations);
             }

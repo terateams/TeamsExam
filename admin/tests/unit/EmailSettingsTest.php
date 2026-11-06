@@ -30,6 +30,7 @@ final class EmailSettingsTest extends CIUnitTestCase
                 service('settings')->forget(MailTemplates::settingKey($type, $locale, 'body'));
             }
         }
+        Services::resetSingle('mailtemplates');
         Services::resetSingle('email');
         auth()->logout();
         parent::tearDown();

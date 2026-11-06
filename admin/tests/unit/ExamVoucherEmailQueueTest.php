@@ -3,6 +3,7 @@
 use CodeIgniter\Config\Services;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 use CodeIgniter\Encryption\EncrypterInterface;
+use CodeIgniter\Events\Events;
 use CodeIgniter\Queue\Commands\QueueWork;
 use CodeIgniter\Queue\Entities\QueueJob;
 use CodeIgniter\Queue\Events\QueueEventManager;
@@ -37,6 +38,7 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
 
     protected function tearDown(): void
     {
+        Events::simulate(true);
         auth()->logout();
         Services::resetSingle('email');
         Services::resetSingle('encrypter');
@@ -531,6 +533,7 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
 
     public function testWorkerRetriesAndFailedRecordDoesNotExposeVoucherCode(): void
     {
+        Events::simulate(false);
         $voucher = $this->voucher('worker-private-code', true);
         Services::injectMock('encrypter', $this->encrypter());
         $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => '{code}'], str_repeat('a', 32));
@@ -559,6 +562,7 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
 
     public function testFailureRemainsActiveUntilFinalFailureEvent(): void
     {
+        Events::simulate(false);
         $voucher = $this->voucher('failure-secret', true);
         Services::injectMock('encrypter', $this->encrypter());
         $this->emailQueue()->enqueue([$voucher], [], ['subject' => 'Subject', 'body' => '{code}'], str_repeat('a', 32));

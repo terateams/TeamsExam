@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'mailDeliveries'       => '考试券邮件记录', 'mailAllDeliveries' => '全部记录', 'mailSendSelected' => '发送选中券', 'mailClearSelection' => '清除选择', 'mailSelect' => '选择考试券',
+    'mailDeliveries'       => '考试券邮件记录', 'mailAllDeliveries' => '全部记录', 'mailSendSelected' => '发送选中券', 'mailClearSelection' => '清除选择', 'mailSelect' => '选择考试券', 'mailSelectedCount' => '已选考试券：',
     'mailPreview'          => '确认发送考试券邮件', 'mailSelectInvalid' => '请选择有效的考试券。', 'mailQueueFailed' => '邮件入队失败，未提交任何邮件。', 'mailQueued' => '邮件已入队，发送结果将在此更新。',
     'mailPreviouslySent'   => '此前已发送', 'mailConfirmSent' => '确认再次发送以上已发送的考试券。', 'mailConfirmSend' => '确认发送', 'mailResend' => '重新发送',
     'mailError_unassigned' => '考试券不存在或尚未分发。', 'mailError_active' => '已有排队或发送中的任务。', 'mailError_sent' => '此前已发送，请确认。', 'mailError_recipient' => '接收人邮箱无效。', 'mailError_code' => '无法解密券码。',

@@ -11,7 +11,7 @@
 <?= $this->section('header') ?>
     <div class="row g-2 align-items-center">
         <div class="col-12 col-md"><h2 class="page-title"><?= esc($page_title) ?></h2></div>
-        <div class="col-12 col-md-auto ms-auto"><a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-vouchers') ?>"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.vouchers')) ?></a></div>
+        <div class="col-12 col-md-auto ms-auto btn-list"><a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-vouchers') ?>"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.vouchers')) ?></a></div>
     </div>
 <?= $this->endSection() ?>
 

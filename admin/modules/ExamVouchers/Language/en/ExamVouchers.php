@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'mailDeliveries'       => 'Voucher email deliveries', 'mailAllDeliveries' => 'All deliveries', 'mailSendSelected' => 'Send selected vouchers', 'mailClearSelection' => 'Clear selection', 'mailSelect' => 'Select voucher',
+    'mailDeliveries'       => 'Voucher email deliveries', 'mailAllDeliveries' => 'All deliveries', 'mailSendSelected' => 'Send selected vouchers', 'mailClearSelection' => 'Clear selection', 'mailSelect' => 'Select voucher', 'mailSelectedCount' => 'Selected vouchers:',
     'mailPreview'          => 'Confirm voucher emails', 'mailSelectInvalid' => 'Select valid vouchers.', 'mailQueueFailed' => 'No emails were queued.', 'mailQueued' => 'Emails queued. Delivery results will appear here.',
     'mailPreviouslySent'   => 'Previously sent', 'mailConfirmSent' => 'Confirm sending the previously sent vouchers again.', 'mailConfirmSend' => 'Confirm send', 'mailResend' => 'Resend',
     'mailError_unassigned' => 'Voucher does not exist or is unassigned.', 'mailError_active' => 'An email is already queued or sending.', 'mailError_sent' => 'Previously sent; confirmation required.', 'mailError_recipient' => 'Recipient email is invalid.', 'mailError_code' => 'Voucher code cannot be decrypted.',

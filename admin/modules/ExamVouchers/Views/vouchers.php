@@ -3,7 +3,7 @@
 <?= $this->section('header') ?>
     <div class="row g-2 align-items-center">
         <div class="col-12 col-md"><h2 class="page-title"><?= esc($page_title) ?></h2></div>
-        <div class="col-12 col-md-auto ms-auto">
+        <div class="col-12 col-md-auto ms-auto btn-list">
             <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-mail/template') ?>"><i class="ti ti-template me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailTemplate')) ?></a>
             <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-mail/deliveries') ?>"><i class="ti ti-mail me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailDeliveries')) ?></a>
             <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-batches') ?>"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.title')) ?></a>
@@ -29,9 +29,13 @@
     <form id="voucher-mail-form" method="post" action="<?= route_to('admin/exam-voucher-mail/preview') ?>" class="mb-3">
         <?= csrf_field() ?>
         <input type="hidden" name="selection" id="voucher-mail-selection" value="">
-        <button type="submit" class="btn btn-primary"><i class="ti ti-mail-forward me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailSendSelected')) ?></button>
-        <button type="button" class="btn btn-outline-secondary" id="voucher-mail-clear"><i class="ti ti-x me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailClearSelection')) ?></button>
-        <span class="text-secondary ms-2" id="voucher-mail-count" aria-live="polite"></span>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="btn-list">
+                <button type="submit" class="btn btn-primary"><i class="ti ti-mail-forward me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailSendSelected')) ?></button>
+                <button type="button" class="btn btn-outline-secondary" id="voucher-mail-clear"><i class="ti ti-x me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailClearSelection')) ?></button>
+            </div>
+            <span class="text-secondary" id="voucher-mail-count" data-label="<?= esc(lang('ExamVouchers.mailSelectedCount'), 'attr') ?>" aria-live="polite"></span>
+        </div>
     </form>
     <div class="card">
         <div class="card-body">
@@ -63,7 +67,7 @@
                             <td class="text-break"><?= esc($voucher['issuer']) ?></td>
                             <td class="text-break"><?= esc($voucher['exam'] ?? '') ?></td>
                             <td class="text-break"><?= esc($voucher['region'] ?? '') ?></td>
-                            <td><?= esc($voucher['expires_on']) ?></td>
+                            <td class="text-nowrap"><?= esc($voucher['expires_on']) ?></td>
                             <td>
                                 <?php if ($voucher['recipient_type'] === null): ?>
                                     <span class="badge bg-yellow-lt"><?= esc(lang('ExamVouchers.unassigned')) ?></span>
@@ -73,7 +77,7 @@
                                     <?php if ($voucher['recipient_type'] === 'external'): ?><div class="text-break text-secondary"><?= esc($voucher['recipient_email']) ?></div><?php endif ?>
                                 <?php endif ?>
                             </td>
-                            <td><?= esc(lang((int) $voucher['usage_verified'] === 0 ? 'ExamVouchers.notVerified' : 'ExamVouchers.verified')) ?></td>
+                            <td><span class="badge <?= (int) $voucher['usage_verified'] === 0 ? 'bg-secondary-lt' : 'bg-success-lt' ?>"><?= esc(lang((int) $voucher['usage_verified'] === 0 ? 'ExamVouchers.notVerified' : 'ExamVouchers.verified')) ?></span></td>
                             <td>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="<?= esc(lang('Admin.userActions') . ' #' . $voucher['id'], 'attr') ?>">
@@ -112,7 +116,7 @@
             const refresh = () => {
                 checks.forEach(check => { check.checked = selected.has(check.value); });
                 field.value = JSON.stringify([...selected]);
-                count.textContent = String(selected.size);
+                count.textContent = `${count.dataset.label} ${selected.size}`;
                 sessionStorage.setItem(key, field.value);
             };
             checks.forEach(check => check.addEventListener('change', () => {

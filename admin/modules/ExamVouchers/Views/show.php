@@ -6,9 +6,15 @@
         <div class="col-12 col-md-auto btn-list">
             <a class="btn btn-primary" href="<?= route_to('admin/exam-vouchers/import', $batch['id']) ?>"><i class="ti ti-upload me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.import')) ?></a>
             <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-vouchers') ?>?batch=<?= (int) $batch['id'] ?>"><i class="ti ti-ticket me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.vouchers')) ?></a>
-            <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-batches/edit', $batch['id']) ?>"><i class="ti ti-edit me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.edit')) ?></a>
-            <span class="d-inline-flex" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.delete'), 'attr') ?>"><button class="btn btn-outline-danger btn-icon" type="button" data-bs-toggle="modal" data-bs-target="#batch-delete" aria-label="<?= esc(lang('ExamVouchers.delete'), 'attr') ?>"><i class="ti ti-trash" aria-hidden="true"></i></button></span>
-            <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-batches') ?>"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.title')) ?></a>
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><?= esc(lang('Admin.userActions')) ?></button>
+                <div class="dropdown-menu dropdown-menu-end">
+                    <a class="dropdown-item" href="<?= route_to('admin/exam-voucher-batches/edit', $batch['id']) ?>"><i class="ti ti-edit me-2" aria-hidden="true"></i><?= esc(lang('ExamVouchers.edit')) ?></a>
+                    <button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#batch-delete"><i class="ti ti-trash me-2" aria-hidden="true"></i><?= esc(lang('ExamVouchers.delete')) ?></button>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="<?= route_to('admin/exam-voucher-batches') ?>"><i class="ti ti-arrow-left me-2" aria-hidden="true"></i><?= esc(lang('ExamVouchers.title')) ?></a>
+                </div>
+            </div>
         </div>
     </div>
 <?= $this->endSection() ?>
@@ -33,9 +39,29 @@
             </form>
         </div>
     </div>
-    <div class="card"><div class="card-body">
-        <dl><dt><?= esc(lang('ExamVouchers.identifier')) ?></dt><dd class="text-break"><?= esc($batch['identifier']) ?></dd>
-        <dt><?= esc(lang('ExamVouchers.issuer')) ?></dt><dd class="text-break"><?= esc($batch['issuer']) ?></dd>
-        <dt><?= esc(lang('ExamVouchers.purchasedOn')) ?></dt><dd><?= esc($batch['purchased_on'] ?? '-') ?></dd></dl>
-    </div></div>
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10 col-xxl-8">
+            <div class="card card-lg">
+                <div class="card-header">
+                    <h3 class="card-title text-break"><?= esc($batch['identifier']) ?></h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6">
+                            <dl class="mb-0">
+                                <dt class="text-secondary"><?= esc(lang('ExamVouchers.issuer')) ?></dt>
+                                <dd class="mb-0 text-break"><?= esc($batch['issuer']) ?></dd>
+                            </dl>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <dl class="mb-0">
+                                <dt class="text-secondary"><?= esc(lang('ExamVouchers.purchasedOn')) ?></dt>
+                                <dd class="mb-0"><?= esc($batch['purchased_on'] ?? '-') ?></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 <?= $this->endSection() ?>

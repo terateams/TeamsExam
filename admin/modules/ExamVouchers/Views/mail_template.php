@@ -36,7 +36,7 @@
                 </div>
             </div>
         </form>
-        <div class="card-footer d-flex align-items-center gap-2">
+        <div class="card-footer d-flex flex-wrap align-items-center gap-2">
             <button form="voucher-mail-template-form" type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1" aria-hidden="true"></i><?= esc(lang('Admin.mailTemplateSave')) ?></button>
             <form method="post" action="<?= route_to('admin/exam-voucher-mail/template/reset') ?>" class="ms-auto">
                 <?= csrf_field() ?>

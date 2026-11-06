@@ -9,23 +9,26 @@
 
 <?= $this->section('content') ?>
     <div class="card card-lg">
+        <div class="card-header">
+            <dl class="d-flex align-items-center gap-2 mb-0">
+                <dt class="card-title mb-0"><i class="ti ti-ticket me-2" aria-hidden="true"></i><?= esc(lang('ExamVouchers.voucherNumber')) ?></dt>
+                <dd class="card-title mb-0">#<?= esc($voucher['id']) ?></dd>
+            </dl>
+        </div>
         <div class="card-body">
-            <dl class="mb-0">
-                <div class="card-title">
-                    <i class="ti ti-ticket me-2" aria-hidden="true"></i><dt class="d-inline"><?= esc(lang('ExamVouchers.voucherNumber')) ?></dt>
-                    <dd class="d-inline">#<?= esc($voucher['id']) ?></dd>
-                </div>
-                <div>
+            <div class="mb-4">
+                <dl class="mb-0">
                     <dt class="text-secondary"><?= esc(lang('ExamVouchers.exam')) ?></dt>
-                    <dd class="h2 text-break mb-4"><?= esc(($voucher['exam'] ?? '') !== '' ? $voucher['exam'] : '—') ?></dd>
-                </div>
-
-                <div class="bg-body-tertiary border rounded p-3 mb-4">
+                    <dd class="h2 text-break mb-0"><?= esc(($voucher['exam'] ?? '') !== '' ? $voucher['exam'] : '—') ?></dd>
+                </dl>
+            </div>
+            <div class="bg-body-tertiary border rounded p-3 mb-4">
+                <dl class="mb-0">
                     <dt class="text-secondary"><?= esc(lang('ExamVouchers.code')) ?></dt>
                     <dd class="font-monospace fs-3 text-break mb-0"><?= esc($code) ?></dd>
-                </div>
-            </dl>
-            <div class="row g-3">
+                </dl>
+            </div>
+            <div class="row g-4">
                 <div class="col-12 col-md-6">
                     <dl class="mb-0">
                         <dt class="text-secondary"><?= esc(lang('ExamVouchers.expiresOn')) ?></dt>

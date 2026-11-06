@@ -3,7 +3,7 @@
 <?= $this->section('header') ?>
     <div class="row g-2 align-items-center">
         <div class="col-12 col-md"><h2 class="page-title"><?= esc($page_title) ?></h2></div>
-        <div class="col-12 col-md-auto ms-auto">
+        <div class="col-12 col-md-auto ms-auto btn-list">
             <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-vouchers') ?>"><i class="ti ti-ticket me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.vouchers')) ?></a>
             <a class="btn btn-primary" href="<?= route_to('admin/exam-voucher-batches/new') ?>"><i class="ti ti-plus me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.create')) ?></a>
         </div>
@@ -21,7 +21,7 @@
             ]) ?>
         </div>
         <div class="table-responsive">
-            <table class="table card-table table-vcenter">
+            <table class="table card-table table-vcenter table-hover">
                 <thead><tr>
                     <?php foreach (['identifier' => 'identifier', 'issuer' => 'issuer', 'purchased_on' => 'purchasedOn'] as $field => $label): ?>
                         <?= view_cell('Geminus\Admin\Cells\SortHeaderCell', ['action' => route_to('admin/exam-voucher-batches'), 'field' => $field, 'label' => lang('ExamVouchers.' . $label), 'sort' => $query->sort, 'direction' => $query->direction, 'filters' => ['q' => $query->search], 'defaultDirection' => $field === 'purchased_on' ? 'DESC' : 'ASC']) ?>
@@ -32,11 +32,11 @@
                 <tbody>
                     <?php foreach ($batches as $batch): ?>
                         <tr>
-                            <td class="text-break"><a href="<?= route_to('admin/exam-voucher-batches/show', $batch['id']) ?>"><?= esc($batch['identifier']) ?></a></td>
+                            <td class="text-break"><a class="fw-medium" href="<?= route_to('admin/exam-voucher-batches/show', $batch['id']) ?>"><?= esc($batch['identifier']) ?></a></td>
                             <td class="text-break"><?= esc($batch['issuer']) ?></td>
                             <td class="text-nowrap"><?= esc($batch['purchased_on'] ?? '-') ?></td>
                             <td><?= esc($voucherCounts[$batch['id']] ?? 0) ?></td>
-                            <td><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-voucher-batches/edit', $batch['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.edit'), 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.edit'), 'attr') ?>"><i class="ti ti-edit" aria-hidden="true"></i></a></td>
+                            <td><a class="btn btn-sm btn-icon btn-outline-secondary" href="<?= route_to('admin/exam-voucher-batches/edit', $batch['id']) ?>" aria-label="<?= esc(lang('ExamVouchers.edit') . ' ' . $batch['identifier'], 'attr') ?>" data-bs-toggle="tooltip" data-bs-title="<?= esc(lang('ExamVouchers.edit'), 'attr') ?>"><i class="ti ti-edit" aria-hidden="true"></i></a></td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if ($batches === []): ?>

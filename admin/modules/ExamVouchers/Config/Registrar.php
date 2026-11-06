@@ -4,15 +4,29 @@ declare(strict_types=1);
 
 namespace Modules\ExamVouchers\Config;
 
+use Modules\ExamVouchers\Jobs\SendVoucherEmail;
+
 class Registrar
 {
+    public static function Queue(): array
+    {
+        return ['jobHandlers' => ['send-voucher-email' => SendVoucherEmail::class]];
+    }
+
     public static function Tasks(): array
     {
-        return ['commands' => [[
-            'name'     => 'exam-voucher-expiry',
-            'command'  => 'exam-vouchers:remind-expiry',
-            'schedule' => '0 0 * * *',
-        ]]];
+        return ['commands' => [
+            [
+                'name'     => 'exam-voucher-expiry',
+                'command'  => 'exam-vouchers:remind-expiry',
+                'schedule' => '0 0 * * *',
+            ],
+            [
+                'name'     => 'exam-voucher-email',
+                'command'  => 'queue:work exam-voucher-email --stop-when-empty',
+                'schedule' => '* * * * *',
+            ],
+        ]];
     }
 
     public static function OperationAudit(): array
@@ -63,6 +77,18 @@ class Registrar
                     'active' => '*/admin/exam-vouchers*',
                 ],
             ],
+        ], [
+            'permission' => 'exam-vouchers.manage',
+            'label'      => 'ExamVouchers.mailTemplate',
+            'icon'       => 'ti-template',
+            'route'      => 'admin/exam-voucher-mail/template',
+            'active'     => '*/admin/exam-voucher-mail/template',
+        ], [
+            'permission' => 'email-deliveries.view',
+            'label'      => 'ExamVouchers.mailDeliveries',
+            'icon'       => 'ti-mail',
+            'route'      => 'admin/mail/voucher-deliveries',
+            'active'     => '*/admin/mail/voucher-deliveries',
         ]]];
     }
 }

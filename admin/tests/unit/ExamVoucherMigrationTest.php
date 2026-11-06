@@ -6,6 +6,7 @@ use CodeIgniter\Test\DatabaseTestTrait;
 use Geminus\Admin\Entities\AdminUser;
 use Modules\ExamVouchers\Database\Migrations\AddExternalExamVoucherRecipients;
 use Modules\ExamVouchers\Database\Migrations\CreateExamVouchers;
+use Modules\ExamVouchers\Database\Migrations\CreateVoucherEmailDeliveries;
 use Modules\ExamVouchers\Models\BatchModel;
 
 /**
@@ -33,6 +34,7 @@ final class ExamVoucherMigrationTest extends CIUnitTestCase
     public function testMigrationRecreatesColumnsAndConstraints(): void
     {
         $migration = new CreateExamVouchers();
+        (new CreateVoucherEmailDeliveries())->down();
         $migration->down();
 
         try {
@@ -41,6 +43,7 @@ final class ExamVoucherMigrationTest extends CIUnitTestCase
         } finally {
             $migration->up();
             (new AddExternalExamVoucherRecipients())->up();
+            (new CreateVoucherEmailDeliveries())->up();
         }
         $this->assertTrue($this->db->tableExists('exam_vouchers'));
         $this->assertTrue($this->db->tableExists('exam_voucher_key_guard'));

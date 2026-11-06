@@ -75,6 +75,26 @@ final class ExamVoucherBatchesTest extends CIUnitTestCase
         $this->assertStringNotContainsString('Exam voucher management', $response->response()->getBody());
         $this->assertStringNotContainsString('href="/en/admin/exam-voucher-batches"', $response->response()->getBody());
         $this->assertStringNotContainsString('href="/en/admin/exam-vouchers"', $response->response()->getBody());
+        $this->assertStringNotContainsString('href="/en/admin/exam-voucher-mail/template"', $response->response()->getBody());
+    }
+
+    public function testVoucherTemplateHasLocalizedStandaloneMenuAndActiveState(): void
+    {
+        $this->loginAs(['exam-vouchers.manage']);
+
+        foreach (['en' => 'Voucher email template', 'zh-Hans' => '考试券邮件模板', 'zh-Hant' => '考試券郵件範本'] as $locale => $label) {
+            $url      = "/{$locale}/admin/exam-voucher-mail/template";
+            $response = $this->get($url);
+            $response->assertStatus(200);
+            $document = new DOMDocument();
+            @$document->loadHTML('<?xml encoding="UTF-8">' . $response->response()->getBody());
+            $xpath = new DOMXPath($document);
+            $links = $xpath->query("//div[@id='sidebar-menu']//li/a[@href='{$url}']");
+            $this->assertSame(1, $links->length);
+            $this->assertSame($label, trim($links->item(0)->textContent));
+            $this->assertSame('page', $links->item(0)->getAttribute('aria-current'));
+            $this->assertStringContainsString(' active ', ' ' . $links->item(0)->getAttribute('class') . ' ');
+        }
     }
 
     public function testManagerCreatesViewsUpdatesAndDeletesBatch(): void

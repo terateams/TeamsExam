@@ -4,6 +4,8 @@
     <div class="row g-2 align-items-center">
         <div class="col-12 col-md"><h2 class="page-title"><?= esc($page_title) ?></h2></div>
         <div class="col-12 col-md-auto ms-auto">
+            <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-mail/template') ?>"><i class="ti ti-template me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailTemplate')) ?></a>
+            <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-mail/deliveries') ?>"><i class="ti ti-mail me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailDeliveries')) ?></a>
             <a class="btn btn-outline-secondary" href="<?= route_to('admin/exam-voucher-batches') ?>"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.title')) ?></a>
         </div>
     </div>
@@ -24,6 +26,13 @@
             </div>
         <?php endforeach ?>
     </div>
+    <form id="voucher-mail-form" method="post" action="<?= route_to('admin/exam-voucher-mail/preview') ?>" class="mb-3">
+        <?= csrf_field() ?>
+        <input type="hidden" name="selection" id="voucher-mail-selection" value="">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-mail-forward me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailSendSelected')) ?></button>
+        <button type="button" class="btn btn-outline-secondary" id="voucher-mail-clear"><i class="ti ti-x me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.mailClearSelection')) ?></button>
+        <span class="text-secondary ms-2" id="voucher-mail-count" aria-live="polite"></span>
+    </form>
     <div class="card">
         <div class="card-body">
             <?= view_cell('Geminus\Admin\Cells\FilterBarCell', [
@@ -49,7 +58,7 @@
                 <tbody>
                     <?php foreach ($vouchers as $voucher): ?>
                         <tr>
-                            <td>#<?= esc($voucher['id']) ?></td>
+                            <td><?php if ($voucher['recipient_type'] !== null): ?><input class="form-check-input voucher-mail-check me-2" type="checkbox" name="ids[]" value="<?= esc($voucher['id'], 'attr') ?>" form="voucher-mail-form" aria-label="<?= esc(lang('ExamVouchers.mailSelect') . ' #' . $voucher['id'], 'attr') ?>"><?php endif ?>#<?= esc($voucher['id']) ?></td>
                             <td class="text-break"><?= esc($voucher['identifier']) ?></td>
                             <td class="text-break"><?= esc($voucher['issuer']) ?></td>
                             <td class="text-break"><?= esc($voucher['exam'] ?? '') ?></td>
@@ -82,4 +91,28 @@
             <?= view_cell('Geminus\Admin\Cells\PaginationCell', ['links' => $pager->only(['q', 'batch'])->links(), 'total' => $pager->getTotal(), 'currentPage' => $pager->getCurrentPage(), 'perPage' => $pager->getPerPage(), 'totalLabel' => lang('ExamVouchers.vouchers')]) ?>
         </div>
     </div>
+<?= $this->endSection() ?>
+
+<?= $this->section('javascript') ?>
+    <script>
+        (() => {
+            const key = 'voucher-mail-selection';
+            const checks = document.querySelectorAll('.voucher-mail-check');
+            const field = document.getElementById('voucher-mail-selection');
+            const count = document.getElementById('voucher-mail-count');
+            let selected = new Set(JSON.parse(sessionStorage.getItem(key) || '[]'));
+            const refresh = () => {
+                checks.forEach(check => { check.checked = selected.has(check.value); });
+                field.value = JSON.stringify([...selected]);
+                count.textContent = String(selected.size);
+                sessionStorage.setItem(key, field.value);
+            };
+            checks.forEach(check => check.addEventListener('change', () => {
+                if (check.checked) selected.add(check.value); else selected.delete(check.value);
+                refresh();
+            }));
+            document.getElementById('voucher-mail-clear').addEventListener('click', () => { selected = new Set(); refresh(); });
+            refresh();
+        })();
+    </script>
 <?= $this->endSection() ?>

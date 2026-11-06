@@ -85,7 +85,7 @@ final class ExamVoucherTasksTest extends CIUnitTestCase
         $config->init($scheduler);
 
         $tasks = [];
-        $this->assertCount(2, $scheduler->getTasks());
+        $this->assertCount(3, $scheduler->getTasks());
 
         foreach ($scheduler->getTasks() as $task) {
             $tasks[$task->name] = [$task->getType(), $task->action, $task->getExpression()];
@@ -93,14 +93,15 @@ final class ExamVoucherTasksTest extends CIUnitTestCase
         ksort($tasks);
 
         $this->assertSame([
+            'exam-voucher-email'  => ['command', 'queue:work exam-voucher-email --stop-when-empty', '* * * * *'],
             'exam-voucher-expiry' => ['command', 'exam-vouchers:remind-expiry', '0 0 * * *'],
             'send-email'          => ['command', 'queue:work email --stop-when-empty', '* * * * *'],
         ], $tasks);
 
         foreach ($scheduler->getTasks() as $task) {
             $this->assertTrue($task->shouldRun('2026-11-03 00:00:00'));
-            $this->assertSame($task->name === 'send-email', $task->shouldRun('2026-11-03 00:01:00'));
-            $this->assertSame($task->name === 'send-email', $task->shouldRun('2026-11-03 12:00:00'));
+            $this->assertSame($task->name !== 'exam-voucher-expiry', $task->shouldRun('2026-11-03 00:01:00'));
+            $this->assertSame($task->name !== 'exam-voucher-expiry', $task->shouldRun('2026-11-03 12:00:00'));
         }
 
         return $scheduler;

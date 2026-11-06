@@ -12,6 +12,36 @@ class VoucherModel extends Model
     protected $primaryKey = 'id';
     protected $returnType = 'array';
 
+    public function lockForEmail(int $voucherId): ?array
+    {
+        $table = $this->db->protectIdentifiers($this->db->prefixTable($this->table));
+
+        return $this->db->query("SELECT * FROM {$table} WHERE id = ? FOR UPDATE", [$voucherId])->getRowArray();
+    }
+
+    public function internalEmailRecipient(int $userId): array
+    {
+        $user     = $this->db->table('users')->select('username')->where('id', $userId)->get()->getRowArray();
+        $identity = $this->db->table('auth_identities')->select('secret')->where('user_id', $userId)->where('type', 'email_password')->get()->getRowArray();
+
+        return ['name' => $user['username'] ?? '', 'email' => $identity['secret'] ?? null];
+    }
+
+    public function previewRecipients(array $voucherIds): array
+    {
+        $vouchers = [];
+
+        foreach (array_chunk($voucherIds, 1000) as $chunk) {
+            $rows = $this->db->table($this->table)->select('id, recipient_type, recipient_name, recipient_email, recipient_id')->whereIn('id', $chunk)->get()->getResultArray();
+
+            foreach ($rows as $row) {
+                $vouchers[(int) $row['id']] = $row;
+            }
+        }
+
+        return $vouchers;
+    }
+
     public function expiringBetween(string $start, string $end): array
     {
         return $this->select('id, expires_on')

@@ -282,6 +282,7 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
             '/en/admin/exam-voucher-mail/send'                                      => ['selection' => json_encode([$voucher])],
             '/en/admin/exam-voucher-mail/deliveries/' . $delivery['id'] . '/resend' => [],
             '/en/admin/exam-voucher-mail/template'                                  => ['subject' => 'Unauthorized', 'body' => '{code}'],
+            '/en/admin/exam-voucher-mail/template/reset'                            => [],
         ];
 
         foreach ($routes as $route => $data) {
@@ -301,6 +302,34 @@ final class ExamVoucherEmailQueueTest extends CIUnitTestCase
         }
         $this->assertSame(1, $this->db->table('exam_voucher_email_deliveries')->countAllResults());
         $this->assertSame($original, (new VoucherMailTemplate(service('settings')))->get());
+    }
+
+    public function testRestoreMailTemplateRequiresCsrfAndRestoresDefaults(): void
+    {
+        $template = new VoucherMailTemplate(service('settings'));
+        $template->save('Custom subject', 'Custom {code}');
+        $this->loginAs(['exam-vouchers.manage']);
+
+        $templatePage = $this->get('/en/admin/exam-voucher-mail/template');
+        $templatePage->assertStatus(200);
+        $this->assertStringContainsString('action="/en/admin/exam-voucher-mail/template/reset"', $templatePage->response()->getBody());
+        $this->assertStringContainsString(lang('Admin.mailTemplateRestore'), $templatePage->response()->getBody());
+
+        try {
+            $this->post('/en/admin/exam-voucher-mail/template/reset');
+            $this->fail('A request without CSRF must be rejected.');
+        } catch (SecurityException) {
+            $this->assertSame(['subject' => 'Custom subject', 'body' => 'Custom {code}'], $template->get());
+        }
+
+        $reset = $this->post('/en/admin/exam-voucher-mail/template/reset', [csrf_token() => csrf_hash()]);
+        $reset->assertRedirectTo('/en/admin/exam-voucher-mail/template');
+        $reset->assertSessionHas('alert', ['type' => 'success', 'message' => lang('Admin.mailTemplateReset')]);
+
+        $this->assertSame([
+            'subject' => lang('ExamVouchers.mailDefaultSubject'),
+            'body'    => lang('ExamVouchers.mailDefaultBody'),
+        ], $template->get());
     }
 
     public function testSendAndResendUseCurrentTemplateAndRecipient(): void

@@ -11,6 +11,7 @@ $routes->group('{locale}/admin', ['namespace' => 'Modules\ExamVouchers\Controlle
     $routes->get('exam-vouchers', 'Vouchers::index', ['as' => 'admin/exam-vouchers']);
     $routes->get('exam-voucher-mail/template', 'VoucherMailTemplates::edit', ['as' => 'admin/exam-voucher-mail/template']);
     $routes->post('exam-voucher-mail/template', 'VoucherMailTemplates::update', ['as' => 'admin/exam-voucher-mail/template/update']);
+    $routes->post('exam-voucher-mail/template/reset', 'VoucherMailTemplates::reset', ['as' => 'admin/exam-voucher-mail/template/reset']);
     $routes->post('exam-voucher-mail/preview', 'VoucherMailDeliveries::preview', ['as' => 'admin/exam-voucher-mail/preview']);
     $routes->post('exam-voucher-mail/send', 'VoucherMailDeliveries::send', ['as' => 'admin/exam-voucher-mail/send']);
     $routes->get('exam-voucher-mail/deliveries', 'VoucherMailDeliveries::index', ['as' => 'admin/exam-voucher-mail/deliveries']);

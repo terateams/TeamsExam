@@ -1,13 +1,17 @@
 <?php
 
 return [
-    'mailDeliveries'        => 'Voucher email deliveries', 'mailAllDeliveries' => 'All deliveries', 'mailSendSelected' => 'Send selected vouchers', 'mailClearSelection' => 'Clear selection', 'mailSelect' => 'Select voucher',
-    'mailPreview'           => 'Confirm voucher emails', 'mailSelectInvalid' => 'Select valid vouchers.', 'mailQueueFailed' => 'No emails were queued.', 'mailQueued' => 'Emails queued. Delivery results will appear here.',
-    'mailPreviouslySent'    => 'Previously sent', 'mailConfirmSent' => 'Confirm sending the previously sent vouchers again.', 'mailConfirmSend' => 'Confirm send', 'mailResend' => 'Resend',
-    'mailError_unassigned'  => 'Voucher does not exist or is unassigned.', 'mailError_active' => 'An email is already queued or sending.', 'mailError_sent' => 'Previously sent; confirmation required.', 'mailError_recipient' => 'Recipient email is invalid.', 'mailError_code' => 'Voucher code cannot be decrypted.',
-    'mailTemplate'          => 'Voucher email template', 'mailTemplateInvalid' => 'The body must contain {code} and only the listed variables; the subject cannot contain variables or line breaks.',
-    'mailTemplateSaved'     => 'Voucher email template saved.', 'mailDefaultSubject' => 'Your exam voucher',
-    'mailDefaultBody'       => '<p>Hello {name},</p><p>Your exam voucher code: {code}</p><p>Exam: {exam}; region: {region}; expires: {expiresOn}</p>',
+    'mailDeliveries'       => 'Voucher email deliveries', 'mailAllDeliveries' => 'All deliveries', 'mailSendSelected' => 'Send selected vouchers', 'mailClearSelection' => 'Clear selection', 'mailSelect' => 'Select voucher',
+    'mailPreview'          => 'Confirm voucher emails', 'mailSelectInvalid' => 'Select valid vouchers.', 'mailQueueFailed' => 'No emails were queued.', 'mailQueued' => 'Emails queued. Delivery results will appear here.',
+    'mailPreviouslySent'   => 'Previously sent', 'mailConfirmSent' => 'Confirm sending the previously sent vouchers again.', 'mailConfirmSend' => 'Confirm send', 'mailResend' => 'Resend',
+    'mailError_unassigned' => 'Voucher does not exist or is unassigned.', 'mailError_active' => 'An email is already queued or sending.', 'mailError_sent' => 'Previously sent; confirmation required.', 'mailError_recipient' => 'Recipient email is invalid.', 'mailError_code' => 'Voucher code cannot be decrypted.',
+    'mailTemplate'         => 'Voucher email template', 'mailTemplateInvalid' => 'The body must contain {code} and only the listed variables; the subject cannot contain variables or line breaks.',
+    'mailTemplateSaved'    => 'Voucher email template saved.', 'mailDefaultSubject' => 'Your exam voucher',
+    'mailDefaultBody'      => <<<'HTML'
+        <p>Hello {name},</p>
+        <p>Your exam voucher code: {code}</p>
+        <p>Exam: {exam}; region: {region}; expires: {expiresOn}</p>
+        HTML,
     'menu'                  => 'Exam voucher management', 'voucherList' => 'Exam voucher list',
     'title'                 => 'Exam voucher batches', 'batch' => 'Purchase batch', 'create' => 'New batch',
     'edit'                  => 'Edit batch', 'identifier' => 'Batch identifier', 'issuer' => 'Issuer',

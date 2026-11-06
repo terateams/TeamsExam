@@ -46,4 +46,12 @@ class VoucherMailTemplates extends ResourcePresenter
 
         return redirect()->to($url)->with('alert', ['type' => 'success', 'message' => lang('ExamVouchers.mailTemplateSaved')]);
     }
+
+    public function reset($id = null): RedirectResponse
+    {
+        (new VoucherMailTemplate(service('settings')))->reset();
+
+        return redirect()->to(route_to('admin/exam-voucher-mail/template'))
+            ->with('alert', ['type' => 'success', 'message' => lang('Admin.mailTemplateReset')]);
+    }
 }

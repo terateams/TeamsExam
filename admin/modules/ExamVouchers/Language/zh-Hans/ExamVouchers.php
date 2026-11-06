@@ -1,13 +1,17 @@
 <?php
 
 return [
-    'mailDeliveries'        => '考试券邮件记录', 'mailAllDeliveries' => '全部记录', 'mailSendSelected' => '发送选中券', 'mailClearSelection' => '清除选择', 'mailSelect' => '选择考试券',
-    'mailPreview'           => '确认发送考试券邮件', 'mailSelectInvalid' => '请选择有效的考试券。', 'mailQueueFailed' => '邮件入队失败，未提交任何邮件。', 'mailQueued' => '邮件已入队，发送结果将在此更新。',
-    'mailPreviouslySent'    => '此前已发送', 'mailConfirmSent' => '确认再次发送以上已发送的考试券。', 'mailConfirmSend' => '确认发送', 'mailResend' => '重新发送',
-    'mailError_unassigned'  => '考试券不存在或尚未分发。', 'mailError_active' => '已有排队或发送中的任务。', 'mailError_sent' => '此前已发送，请确认。', 'mailError_recipient' => '接收人邮箱无效。', 'mailError_code' => '无法解密券码。',
-    'mailTemplate'          => '考试券邮件模板', 'mailTemplateInvalid' => '模板无效：正文必须包含 {code}，且只能使用列出的变量；主题不能包含变量或换行。',
-    'mailTemplateSaved'     => '考试券邮件模板已保存。', 'mailDefaultSubject' => '您的考试券',
-    'mailDefaultBody'       => '<p>您好，{name}：</p><p>您的考试券码：{code}</p><p>适用考试：{exam}；地区：{region}；有效期至：{expiresOn}</p>',
+    'mailDeliveries'       => '考试券邮件记录', 'mailAllDeliveries' => '全部记录', 'mailSendSelected' => '发送选中券', 'mailClearSelection' => '清除选择', 'mailSelect' => '选择考试券',
+    'mailPreview'          => '确认发送考试券邮件', 'mailSelectInvalid' => '请选择有效的考试券。', 'mailQueueFailed' => '邮件入队失败，未提交任何邮件。', 'mailQueued' => '邮件已入队，发送结果将在此更新。',
+    'mailPreviouslySent'   => '此前已发送', 'mailConfirmSent' => '确认再次发送以上已发送的考试券。', 'mailConfirmSend' => '确认发送', 'mailResend' => '重新发送',
+    'mailError_unassigned' => '考试券不存在或尚未分发。', 'mailError_active' => '已有排队或发送中的任务。', 'mailError_sent' => '此前已发送，请确认。', 'mailError_recipient' => '接收人邮箱无效。', 'mailError_code' => '无法解密券码。',
+    'mailTemplate'         => '考试券邮件模板', 'mailTemplateInvalid' => '模板无效：正文必须包含 {code}，且只能使用列出的变量；主题不能包含变量或换行。',
+    'mailTemplateSaved'    => '考试券邮件模板已保存。', 'mailDefaultSubject' => '您的考试券',
+    'mailDefaultBody'      => <<<'HTML'
+        <p>您好，{name}：</p>
+        <p>您的考试券码：{code}</p>
+        <p>适用考试：{exam}；地区：{region}；有效期至：{expiresOn}</p>
+        HTML,
     'menu'                  => '考试券管理', 'voucherList' => '考试券列表',
     'title'                 => '考试券采购批次', 'batch' => '采购批次', 'create' => '新建批次',
     'edit'                  => '编辑批次', 'identifier' => '批次标识', 'issuer' => '发券方',

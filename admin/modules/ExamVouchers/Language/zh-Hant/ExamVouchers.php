@@ -1,13 +1,17 @@
 <?php
 
 return [
-    'mailDeliveries'        => '考試券郵件記錄', 'mailAllDeliveries' => '全部記錄', 'mailSendSelected' => '發送所選券', 'mailClearSelection' => '清除選擇', 'mailSelect' => '選擇考試券',
-    'mailPreview'           => '確認發送考試券郵件', 'mailSelectInvalid' => '請選擇有效的考試券。', 'mailQueueFailed' => '郵件入佇列失敗，未提交任何郵件。', 'mailQueued' => '郵件已入佇列，發送結果將在此更新。',
-    'mailPreviouslySent'    => '此前已發送', 'mailConfirmSent' => '確認再次發送以上已發送的考試券。', 'mailConfirmSend' => '確認發送', 'mailResend' => '重新發送',
-    'mailError_unassigned'  => '考試券不存在或尚未分發。', 'mailError_active' => '已有排隊或發送中的任務。', 'mailError_sent' => '此前已發送，請確認。', 'mailError_recipient' => '接收人郵箱無效。', 'mailError_code' => '無法解密券碼。',
-    'mailTemplate'          => '考試券郵件範本', 'mailTemplateInvalid' => '內文必須包含 {code} 且只能使用所列變數；主旨不能包含變數或換行。',
-    'mailTemplateSaved'     => '考試券郵件範本已儲存。', 'mailDefaultSubject' => '您的考試券',
-    'mailDefaultBody'       => '<p>您好，{name}：</p><p>您的考試券碼：{code}</p><p>適用考試：{exam}；地區：{region}；有效期至：{expiresOn}</p>',
+    'mailDeliveries'       => '考試券郵件記錄', 'mailAllDeliveries' => '全部記錄', 'mailSendSelected' => '發送所選券', 'mailClearSelection' => '清除選擇', 'mailSelect' => '選擇考試券',
+    'mailPreview'          => '確認發送考試券郵件', 'mailSelectInvalid' => '請選擇有效的考試券。', 'mailQueueFailed' => '郵件入佇列失敗，未提交任何郵件。', 'mailQueued' => '郵件已入佇列，發送結果將在此更新。',
+    'mailPreviouslySent'   => '此前已發送', 'mailConfirmSent' => '確認再次發送以上已發送的考試券。', 'mailConfirmSend' => '確認發送', 'mailResend' => '重新發送',
+    'mailError_unassigned' => '考試券不存在或尚未分發。', 'mailError_active' => '已有排隊或發送中的任務。', 'mailError_sent' => '此前已發送，請確認。', 'mailError_recipient' => '接收人郵箱無效。', 'mailError_code' => '無法解密券碼。',
+    'mailTemplate'         => '考試券郵件範本', 'mailTemplateInvalid' => '內文必須包含 {code} 且只能使用所列變數；主旨不能包含變數或換行。',
+    'mailTemplateSaved'    => '考試券郵件範本已儲存。', 'mailDefaultSubject' => '您的考試券',
+    'mailDefaultBody'      => <<<'HTML'
+        <p>您好，{name}：</p>
+        <p>您的考試券碼：{code}</p>
+        <p>適用考試：{exam}；地區：{region}；有效期至：{expiresOn}</p>
+        HTML,
     'menu'                  => '考試券管理', 'voucherList' => '考試券列表',
     'title'                 => '考試券採購批次', 'batch' => '採購批次', 'create' => '新增批次',
     'edit'                  => '編輯批次', 'identifier' => '批次標識', 'issuer' => '發券方',

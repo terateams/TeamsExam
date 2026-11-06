@@ -29,6 +29,10 @@
             </div>
             <div class="card-footer"><button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1" aria-hidden="true"></i><?= esc(lang('Admin.mailTemplateSave')) ?></button></div>
         </form>
+        <form method="post" action="<?= route_to('admin/exam-voucher-mail/template/reset') ?>" class="card-footer">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-outline-secondary"><i class="ti ti-restore me-1" aria-hidden="true"></i><?= esc(lang('Admin.mailTemplateRestore')) ?></button>
+        </form>
     </div>
 <?= $this->endSection() ?>
 

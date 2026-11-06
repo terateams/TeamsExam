@@ -33,4 +33,9 @@ final class VoucherMailTemplate
     {
         $this->settings->setMany(['VoucherMail.subject' => $subject, 'VoucherMail.body' => $body]);
     }
+
+    public function reset(): void
+    {
+        $this->settings->forgetMany(['VoucherMail.subject', 'VoucherMail.body']);
+    }
 }

@@ -6,7 +6,7 @@
 
 <?= $this->section('content') ?>
     <div class="card">
-        <form method="post" action="<?= route_to('admin/exam-voucher-mail/template/update') ?>">
+        <form id="voucher-mail-template-form" method="post" action="<?= route_to('admin/exam-voucher-mail/template/update') ?>">
             <?= csrf_field() ?>
             <div class="card-body">
                 <div class="mb-3">
@@ -16,23 +16,33 @@
                 </div>
                 <div class="row g-3 mb-3">
                     <div class="col-12 col-lg-6">
-                        <label class="form-label required" for="template-body"><?= esc(lang('Admin.mailHtmlBody')) ?></label>
-                        <textarea class="form-control<?= session('template_errors.body') ? ' is-invalid' : '' ?>" id="template-body" name="body" rows="15" maxlength="10000" required aria-describedby="template-variables"><?= esc(old('body', $template['body'])) ?></textarea>
-                        <?php if (session('template_errors.body')): ?><div class="invalid-feedback"><?= esc(session('template_errors.body')) ?></div><?php endif; ?>
-                        <div class="form-hint" id="template-variables">{name}, {code}, {exam}, {region}, {expiresOn}</div>
+                        <div class="card h-100">
+                            <div class="card-header"><label class="form-label required card-title mb-0" for="template-body"><?= esc(lang('Admin.mailHtmlBody')) ?></label></div>
+                            <div class="card-body">
+                                <textarea class="form-control<?= session('template_errors.body') ? ' is-invalid' : '' ?>" id="template-body" name="body" rows="15" maxlength="10000" required aria-describedby="template-variables"><?= esc(old('body', $template['body'])) ?></textarea>
+                                <?php if (session('template_errors.body')): ?><div class="invalid-feedback"><?= esc(session('template_errors.body')) ?></div><?php endif; ?>
+                                <div class="form-hint" id="template-variables">{name}, {code}, {exam}, {region}, {expiresOn}</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-12 col-lg-6">
-                        <label class="form-label" for="template-preview"><?= esc(lang('Admin.mailPreview')) ?></label>
-                        <iframe id="template-preview" title="<?= esc(lang('Admin.mailPreview'), 'attr') ?>" class="w-100 border rounded" style="height: 360px" sandbox="" referrerpolicy="no-referrer"></iframe>
+                        <div class="card h-100">
+                            <div class="card-header"><h3 class="card-title"><?= esc(lang('Admin.mailPreview')) ?></h3></div>
+                            <div class="card-body">
+                                <iframe id="template-preview" title="<?= esc(lang('Admin.mailPreview'), 'attr') ?>" class="w-100 border rounded" style="height: 360px" sandbox="" referrerpolicy="no-referrer"></iframe>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="card-footer"><button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1" aria-hidden="true"></i><?= esc(lang('Admin.mailTemplateSave')) ?></button></div>
         </form>
-        <form method="post" action="<?= route_to('admin/exam-voucher-mail/template/reset') ?>" class="card-footer">
-            <?= csrf_field() ?>
-            <button type="submit" class="btn btn-outline-secondary"><i class="ti ti-restore me-1" aria-hidden="true"></i><?= esc(lang('Admin.mailTemplateRestore')) ?></button>
-        </form>
+        <div class="card-footer d-flex align-items-center gap-2">
+            <button form="voucher-mail-template-form" type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1" aria-hidden="true"></i><?= esc(lang('Admin.mailTemplateSave')) ?></button>
+            <form method="post" action="<?= route_to('admin/exam-voucher-mail/template/reset') ?>" class="ms-auto">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-outline-secondary"><i class="ti ti-restore me-1" aria-hidden="true"></i><?= esc(lang('Admin.mailTemplateRestore')) ?></button>
+            </form>
+        </div>
     </div>
 <?= $this->endSection() ?>
 

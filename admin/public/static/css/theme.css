@@ -1,4 +1,14 @@
 :root {
+    --teams-exam-brand-blue: #0ea5e9;
+    --tblr-primary: #0369a1;
+    --tblr-primary-fg: #fff;
+    --tblr-link-color: #0369a1;
+    --tblr-link-hover-color: #075985;
+}
+
+html[data-bs-theme="dark"] {
     --tblr-primary: #38bdf8;
     --tblr-primary-fg: #082f49;
+    --tblr-link-color: #7dd3fc;
+    --tblr-link-hover-color: #bae6fd;
 }

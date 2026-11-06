@@ -16,57 +16,75 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
-    <div class="card"><div class="card-body">
-        <p><?= esc(lang('ExamVouchers.voucherNumber')) ?>: #<?= esc($voucher['id']) ?></p>
-        <?php if ($voucher['recipient_type'] !== null): ?>
+    <?php if ($voucher['recipient_type'] !== null): ?>
+        <div class="card"><div class="card-body">
+            <p><?= esc(lang('ExamVouchers.voucherNumber')) ?>: #<?= esc($voucher['id']) ?></p>
             <p><?= esc(lang('ExamVouchers.alreadyAssigned')) ?></p>
-        <?php else: ?>
-            <form id="recipient-search" method="get" action="<?= route_to('admin/exam-vouchers/assign', $voucher['id']) ?>">
-                <div class="mb-3">
-                    <label class="form-label" for="username"><?= esc(lang('ExamVouchers.username')) ?></label>
-                    <input class="form-control" id="username" name="username" value="<?= esc($search, 'attr') ?>" maxlength="30" required aria-describedby="username-hint">
-                    <div class="form-hint" id="username-hint"><?= esc(lang('ExamVouchers.recipientHint')) ?></div>
-                </div>
-                <button class="btn btn-outline-primary" type="submit"><i class="ti ti-search me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.search')) ?></button>
-            </form>
-            <form method="post" action="<?= route_to('admin/exam-vouchers/assign/store', $voucher['id']) ?>" class="mt-3">
-                <?= csrf_field() ?>
-                <input type="hidden" name="recipient_type" value="internal">
-                <h3><?= esc(lang('ExamVouchers.internalRecipient')) ?></h3>
-                <div class="mb-3">
-                    <label class="form-label" for="recipient"><?= esc(lang('ExamVouchers.recipient')) ?></label>
-                    <select class="form-select" id="recipient" name="recipient_id" required aria-describedby="recipient-hint recipient-status" data-placeholder="<?= esc(lang('ExamVouchers.selectRecipient'), 'attr') ?>">
-                        <option value=""><?= esc(lang('ExamVouchers.selectRecipient')) ?></option>
-                        <?php foreach ($users as $user): ?>
-                            <option value="<?= esc($user->id, 'attr') ?>" data-custom-properties="<?= esc(view_cell('Geminus\Admin\Cells\AvatarCell', ['user' => $user]), 'attr') ?>"><?= esc($user->username) ?></option>
-                        <?php endforeach ?>
-                    </select>
-                    <div class="form-hint" id="recipient-hint"><?= esc(lang('ExamVouchers.confirmSelected')) ?></div>
-                    <div class="form-hint" id="recipient-status" aria-live="polite" data-error="<?= esc(lang('ExamVouchers.searchFailed'), 'attr') ?>" data-empty="<?= esc(lang('ExamVouchers.userNotFound'), 'attr') ?>">
-                        <?php if ($moreUsers): ?><?= esc(lang('ExamVouchers.refineSearch')) ?>
-                        <?php elseif ($search !== '' && $users === []): ?><?= esc(lang('ExamVouchers.userNotFound')) ?><?php endif ?>
+        </div></div>
+    <?php else: ?>
+        <p class="text-secondary mb-3"><?= esc(lang('ExamVouchers.voucherNumber')) ?>: #<?= esc($voucher['id']) ?></p>
+        <div class="row row-cards">
+            <div class="col-12 col-xl-6">
+                <section class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-user me-2 text-primary" aria-hidden="true"></i><?= esc(lang('ExamVouchers.internalRecipient')) ?></h3>
                     </div>
-                </div>
-                <button class="btn btn-primary" type="submit"><i class="ti ti-user-check me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.confirmAssign')) ?></button>
-            </form>
-            <hr>
-            <form method="post" action="<?= route_to('admin/exam-vouchers/assign/store', $voucher['id']) ?>">
-                <?= csrf_field() ?>
-                <input type="hidden" name="recipient_type" value="external">
-                <h3><?= esc(lang('ExamVouchers.externalRecipient')) ?></h3>
-                <p class="text-secondary"><?= esc(lang('ExamVouchers.externalRecipientHint')) ?></p>
-                <div class="mb-3">
-                    <label class="form-label" for="recipient-name"><?= esc(lang('ExamVouchers.recipientName')) ?></label>
-                    <input class="form-control" id="recipient-name" name="recipient_name" type="text" maxlength="255" autocomplete="name" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label" for="recipient-email"><?= esc(lang('ExamVouchers.recipientEmail')) ?></label>
-                    <input class="form-control" id="recipient-email" name="recipient_email" type="email" maxlength="254" autocomplete="email" required>
-                </div>
-                <button class="btn btn-primary" type="submit"><i class="ti ti-user-check me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.confirmAssign')) ?></button>
-            </form>
-        <?php endif ?>
-    </div></div>
+                    <div class="card-body">
+                        <form id="recipient-search" method="get" action="<?= route_to('admin/exam-vouchers/assign', $voucher['id']) ?>">
+                            <div class="mb-3">
+                                <label class="form-label" for="username"><?= esc(lang('ExamVouchers.username')) ?></label>
+                                <input class="form-control" id="username" name="username" value="<?= esc($search, 'attr') ?>" maxlength="30" required aria-describedby="username-hint">
+                                <div class="form-hint" id="username-hint"><?= esc(lang('ExamVouchers.recipientHint')) ?></div>
+                            </div>
+                            <button class="btn btn-outline-primary" type="submit"><i class="ti ti-search me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.search')) ?></button>
+                        </form>
+                        <form method="post" action="<?= route_to('admin/exam-vouchers/assign/store', $voucher['id']) ?>" class="mt-3">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="recipient_type" value="internal">
+                            <div class="mb-3">
+                                <label class="form-label" for="recipient"><?= esc(lang('ExamVouchers.recipient')) ?></label>
+                                <select class="form-select" id="recipient" name="recipient_id" required aria-describedby="recipient-hint recipient-status" data-placeholder="<?= esc(lang('ExamVouchers.selectRecipient'), 'attr') ?>">
+                                    <option value=""><?= esc(lang('ExamVouchers.selectRecipient')) ?></option>
+                                    <?php foreach ($users as $user): ?>
+                                        <option value="<?= esc($user->id, 'attr') ?>" data-custom-properties="<?= esc(view_cell('Geminus\Admin\Cells\AvatarCell', ['user' => $user]), 'attr') ?>"><?= esc($user->username) ?></option>
+                                    <?php endforeach ?>
+                                </select>
+                                <div class="form-hint" id="recipient-hint"><?= esc(lang('ExamVouchers.confirmSelected')) ?></div>
+                                <div class="form-hint" id="recipient-status" aria-live="polite" data-error="<?= esc(lang('ExamVouchers.searchFailed'), 'attr') ?>" data-empty="<?= esc(lang('ExamVouchers.userNotFound'), 'attr') ?>">
+                                    <?php if ($moreUsers): ?><?= esc(lang('ExamVouchers.refineSearch')) ?>
+                                    <?php elseif ($search !== '' && $users === []): ?><?= esc(lang('ExamVouchers.userNotFound')) ?><?php endif ?>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" type="submit"><i class="ti ti-user-check me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.confirmAssign')) ?></button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+            <div class="col-12 col-xl-6">
+                <section class="card h-100">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="ti ti-user-plus me-2 text-primary" aria-hidden="true"></i><?= esc(lang('ExamVouchers.externalRecipient')) ?></h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-secondary"><?= esc(lang('ExamVouchers.externalRecipientHint')) ?></p>
+                        <form method="post" action="<?= route_to('admin/exam-vouchers/assign/store', $voucher['id']) ?>">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="recipient_type" value="external">
+                            <div class="mb-3">
+                                <label class="form-label" for="recipient-name"><?= esc(lang('ExamVouchers.recipientName')) ?></label>
+                                <input class="form-control" id="recipient-name" name="recipient_name" type="text" maxlength="255" autocomplete="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="recipient-email"><?= esc(lang('ExamVouchers.recipientEmail')) ?></label>
+                                <input class="form-control" id="recipient-email" name="recipient_email" type="email" maxlength="254" autocomplete="email" required>
+                            </div>
+                            <button class="btn btn-primary" type="submit"><i class="ti ti-user-check me-1" aria-hidden="true"></i><?= esc(lang('ExamVouchers.confirmAssign')) ?></button>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </div>
+    <?php endif ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('javascript') ?>
